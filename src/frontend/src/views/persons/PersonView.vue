@@ -27,7 +27,10 @@
 		class="text-left"
 	>
 		<template v-slot:[`item.id`]="{ item }">
-			<div @click="toPersonProfilePath(item.id)">{{ item.id }}</div>
+			<button 
+				class="id-button" 
+				@click="toPersonProfilePath(item.id)"
+			>{{ item.id }}</button>
 		</template>
 
 		<template v-slot:[`item.role`]="{ item }">
@@ -92,3 +95,17 @@ function toPersonProfilePath(personId) {
 
 
 </script>
+
+<style scoped>
+
+.id-button {
+	text-decoration: underline;
+	color: #2196F3;
+	transition: color 0.2s ease;
+}
+
+.id-button:hover {
+	color: blue;
+}
+
+</style>

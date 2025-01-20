@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '@/views/HomeView.vue'
 import PersonView from '@/views/persons/PersonView.vue'
-import PersonProfileView from '@/views/personProfile/PersonProfileView.vue'
+import PersonProfileView from '@/views/persons/PersonProfileView.vue'
 import ResourceView from '@/views/resources/ResourceView.vue'
 
 const router = createRouter({

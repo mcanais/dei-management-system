@@ -6,9 +6,12 @@
 	<!-- move this into cards !-->
 	<p>Controla de forma simples os recursos do Departamento de Engenharia Informática.</p>
 	<p>Pode agendar reservas ou manutenções de um recurso durante um período de tempo e consultar que recursos estão a ser utilizados atualmente, bem como o histórico de utilização de cada recurso.</p>
+
+	<!-- TODO: add statistics !-->
 </template>
 
 <script setup lang="ts">
+
 </script>
 
 <style scoped>

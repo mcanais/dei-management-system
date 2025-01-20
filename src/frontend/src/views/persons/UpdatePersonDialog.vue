@@ -67,7 +67,7 @@
 						<v-spacer />
 
 						<v-btn 
-							text="Fechar" 
+							text="Cancelar" 
 							variant="plain" 
 							@click="
 							dialog = false;
