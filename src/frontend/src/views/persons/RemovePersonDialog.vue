@@ -3,9 +3,22 @@
 		<v-dialog v-model="dialog" max-width="400">
 			<template v-slot:activator="{ props: activatorProps }">
 				<v-icon
+					v-if="props.buttonText != true"
 					v-bind="activatorProps"
 					class="mr-5"
 				>mdi-delete</v-icon>
+
+				<v-btn
+					v-else
+					v-bind="activatorProps"
+					prepend-icon="mdi-delete"
+					color="error"
+					text="Remover Pessoa"
+					density="comfortable"
+					variant="text"
+					style="text-transform: none;"
+					@click="initialize"
+				/>
 			</template>
 
 			<v-card prepend-icon="mdi-account" title="Remover Pessoa">
@@ -41,7 +54,10 @@
 <script setup lang="ts">
 
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import RemoteService from '@/services/RemoteService'
+
+const router = useRouter()
 
 
 const dialog = ref(false)
@@ -49,12 +65,14 @@ const dialog = ref(false)
 const emit = defineEmits(['person-removed'])
 
 const props = defineProps({
-	person: Object
+	person: Object,
+	buttonText: Boolean || null,
 })
 
 function removePerson() {
 	RemoteService.deletePerson(props.person).then(() => {
 		emit('person-removed')
+		router.push(`/persons`)
 	})
 }
 

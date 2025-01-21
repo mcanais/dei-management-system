@@ -22,20 +22,15 @@ export function getDateFromString(s: string) {
 }
 
 
-// Gets the current day as a string dd/mm/yyyy
-export function getCurrentDay(): string {
-	const currentDay = new Date()
+// Gets the date that is n days away from today's date
+// 		getRelativeDate(0) --> today's date
+//		getRelativeDate(1) --> tomorrow's date
+//		getRelativeDate(-1) --> yesterday's date
+export function getRelativeDate(n: number): Date {
+	const todayDate = new Date()
+	todayDate.setDate(todayDate.getDate() + n)
 
-	return getStringFromDate(currentDay)
-}
-
-
-// Gets the day of tomorrow as a string dd/mm/yyyy
-export function getTomorrowDay(): string {
-	const tomorrow = new Date()
-	tomorrow.setDate(tomorrow.getDate() + 1)
-
-	return getStringFromDate(tomorrow)
+	return todayDate
 }
 
 

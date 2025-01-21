@@ -1,5 +1,5 @@
 <template>
-	<div class="text-center">
+	<div>
 		<v-dialog v-model="dialog" max-width="400">
 			<template v-slot:activator="{ props: activatorProps }">
 				<!-- Create Person Button !-->
@@ -14,13 +14,26 @@
 					@click="initialize"
 				/>
 
-				<!-- Edit Person Button !-->
+				<!-- Edit Person Icon !-->
 				<v-icon
-					v-else
+					v-else-if="props.buttonText != true"
 					v-bind="activatorProps"
 					class="mr-2"
 					@click="initialize"
 				>mdi-pencil</v-icon>
+
+				<!-- Edit Person Button !-->
+				<v-btn
+					v-else
+					v-bind="activatorProps"
+					prepend-icon="mdi-pencil"
+					text="Editar Pessoa"
+					density="comfortable"
+					variant="text"
+					style="text-transform: none;"
+					@click="initialize"
+				/>
+					
 			</template>
 
 			<v-form v-model="valid" @submit.prevent="onSubmit">
@@ -119,6 +132,7 @@ const saveButtonText = ref('')
 
 const props = defineProps({
 	person: Object || null,
+	buttonText: Boolean || null,
 })
 
 const createPerson = async () => {

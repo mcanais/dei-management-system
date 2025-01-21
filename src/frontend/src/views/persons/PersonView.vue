@@ -90,7 +90,7 @@ async function getPersons() {
 }
 
 function toPersonProfilePath(personId) {
-	return router.push(`/persons/${personId}`)
+	router.push(`/persons/${personId}`)
 }
 
 
@@ -105,7 +105,7 @@ function toPersonProfilePath(personId) {
 }
 
 .id-button:hover {
-	color: blue;
+	color: #215cf3;
 }
 
 </style>

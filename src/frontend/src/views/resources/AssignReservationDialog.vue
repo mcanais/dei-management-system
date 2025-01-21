@@ -17,73 +17,62 @@
 				>mdi-cog</v-icon>
 			</template>
 
-			<v-form v-model="valid" @submit.prevent="onSubmit" ref="form">
-				<v-card prepend-icon="mdi-briefcase" :title="title">
-					<v-card-text>
-						<!-- Persons list !-->
-						<v-autocomplete
-							v-if="!props.maintenance"
-							label="IST ID da Pessoa"
-							v-model="istIdSelected"
-							:items="personIds"
-							:rules="istIdRules"
-							auto-select-first
-							required
-							class="mb-3"
-						></v-autocomplete>
-						
-						<!-- Date selection !-->
-						<!-- TODO: move this into a date picker !-->
-						<p class="ml-2 mt-2 mb-2">{{ label }}</p>
-						<v-divider></v-divider>
-						<v-text-field 
-							label="Data Inicial" 
-							v-model="newReservation.startDate"
-							:rules="startDateRules"
-							ref="startDateTextField"
-							@input="validateTextFields"
-							required 
-							class="mb-3"
-						></v-text-field>
+			<v-card prepend-icon="mdi-briefcase" :title="title">
+				<v-card-text>
+					<!-- Persons list !-->
+					<v-autocomplete
+						v-if="!props.maintenance"
+						label="IST ID da Pessoa"
+						v-model="istIdSelected"
+						:items="personIds"
+						:rules="istIdRules"
+						@update:model-value="updateTextFields"
+						required
+						class="mb-2"
+					></v-autocomplete>
+					
+					<!-- Date selection !-->
+					<p class="ml-2 mt-2 mb-2">{{ label }}</p>
 
-						<v-text-field 
-							label="Data Final" 
-							v-model="newReservation.finishDate"
-							:rules="finishDateRules"
-							ref="finishDateTextField"
-							@input="validateTextFields"
-							required 
-						></v-text-field>
+					<v-date-picker 
+						v-model="dateInterval"
+						multiple="range"
+						:min="getRelativeDate(-1)"
+						:allowed-dates="doesntOverlapReservations"
+						:hide-header="true"
+						@click="updateTextFields"
+					/>
 
+					<Transition name="fade">
+						<p class="reservation-label" v-if="newReservation.startDate != ''">{{ newReservation.startDate }} - {{ newReservation.finishDate}} </p>
+					</Transition>
 
-					</v-card-text>
+				</v-card-text>
 
-					<v-divider></v-divider>
+				<v-divider></v-divider>
 
-					<v-card-actions>
-						<v-spacer></v-spacer>
+				<v-card-actions>
+					<v-spacer></v-spacer>
 
-						<v-btn 
-							text="Cancelar" 
-							variant="plain" 
-							@click="
-							dialog = false;
-							"
-						></v-btn>
+					<v-btn 
+						text="Cancelar" 
+						variant="plain" 
+						@click="
+						dialog = false;
+						"
+					></v-btn>
 
-						<v-btn
-							text="Salvar"
-							color="primary"
-							:disabled="!valid"
-							type="submit"
-							@click="
-							dialog = false;
-							assignReservation()
-							"
-						></v-btn>
-					</v-card-actions>
-				</v-card>
-			</v-form>
+					<v-btn
+						text="Salvar"
+						color="primary"
+						:disabled="!valid"
+						@click="
+						dialog = false;
+						assignReservation()
+						"
+					></v-btn>
+				</v-card-actions>
+			</v-card>
 		</v-dialog>
 	</div>
 </template>
@@ -94,15 +83,12 @@ import { ref, reactive } from 'vue'
 import type ReservationDto from '@/models/dtos'
 import RemoteService from '@/services/RemoteService'
 import { validDate } from '@/lib/regExpressions'
-import { getCurrentDay, getTomorrowDay, isPastDate, overlappingReservations } from '@/lib/dateUtils'
+import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
 
 
 const dialog = ref(false)
 const valid = ref(false)
-const form = ref(null)
 
-const startDateTextField = ref(null)
-const finishDateTextField = ref(null)
 
 const title = ref('')
 const label = ref('')
@@ -116,6 +102,8 @@ const props = defineProps({
 
 const istIdSelected = ref('')
 
+const dateInterval = ref([])
+
 const newReservation = reactive<ReservationDto>({
 	startDate: '',
 	finishDate: '',
@@ -125,31 +113,40 @@ const personIds = reactive([])
 
 
 function initialize() {
-	newReservation.startDate = getCurrentDay()
-	newReservation.finishDate = getTomorrowDay()
+	dateInterval.value.splice(0,dateInterval.value.length)
+	updateTextFields()
 	
 	if (props.maintenance) {
 		title.value = 'Manutenção'
-		label.value = 'Defina a duração da manutenção:'
+		label.value = 'Defina a duração da manutenção no calendário:'
 	} else { 
 		title.value = 'Reserva'
-		label.value = 'Defina a duração da reserva:'
+		label.value = 'Defina a duração da reserva no calendário:'
 
 		istIdSelected.value = ''
 		getPersonIds()
 	}
-
-	validateTextFields()
 }
 
-const assignReservation = async () => {
-	const {valid, errors} = await form.value?.validate()
-	
-	if (!valid) {
-		console.log(errors)
+function updateTextFields() {
+	if (dateInterval.value.length == 0) { 
+		// No date selected
+		newReservation.startDate = ''
+		newReservation.finishDate = ''
+		valid.value = false
+
 		return
 	}
 
+	newReservation.startDate = getStringFromDate(dateInterval.value[0])
+	newReservation.finishDate = getStringFromDate(dateInterval.value[dateInterval.value.length-1])
+
+	// TODO: extra validation step so the date interval doesnt overlap
+
+	valid.value = (props.maintenance == true || (istIdSelected.value != '' && istIdSelected.value != null))
+}
+
+const assignReservation = async () => {
 	if (props.maintenance) {
 		await RemoteService.assignMaintenance(newReservation, props.resource.id)
 	} else {
@@ -169,31 +166,44 @@ async function getPersonIds() {
 	})
 }
 
-function onSubmit() {
-	return !valid
-}
 
+function doesntOverlapReservations(date: Date): boolean {
+	for (const reservation of props.resource.reservations) {
+		// TODO: skip if the reservation is finished or cancelled
 
-function validateTextFields() {
-	form.value?.validate()
+		var reservationStartDate = getDateFromString(reservation.startDate)
+		var reservationFinishDate = getDateFromString(reservation.finishDate)
+
+		if (date >= reservationStartDate && date <= reservationFinishDate) {
+			return false
+		}
+	}
+
+	return true
 }
 
 const istIdRules = [
 	(v: string) => !!v || 'Insira o IST ID',
 ]
 
-const startDateRules = [
-	(v: string) => !!v || 'Insira a data',
-	(v: string) => validDate(v) || 'Data inválida',
-	(v: string) => !isPastDate(v,getCurrentDay()) || 'Data passada inválida',
-	(v: string) => !overlappingReservations(props.resource.reservations, newReservation) || 'Este recurso já está reservado para esta data'
-]
-
-const finishDateRules = [
-	(v: string) => !!v || 'Insira a data',
-	(v: string) => validDate(v) || 'Data inválida',
-	(v: string) => !isPastDate(v,newReservation.startDate) || 'Data final tem de vir depois de data inicial',
-	(v: string) => !overlappingReservations(props.resource.reservations, newReservation) || 'Este recurso já está reservado para esta data'
-]
-
 </script>
+
+<style scoped>
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+
+.reservation-label {
+	border: 1px solid #ddd;
+	border-radius: 15px;
+	margin: 5px 35px;
+	text-align: center;
+}
+
+</style>
