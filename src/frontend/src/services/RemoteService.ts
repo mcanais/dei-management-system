@@ -61,19 +61,6 @@ export default class RemoteService {
 		})
 	}
 
-	//static async resourceToMaintenance(resource: ResourceDto): Promise<ResourceDto> {
-	//	console.log(resource)
-	//	return httpClient.put('/resources/maintenance', resource).then((response) => {
-	//		return new ResourceDto(response.data)
-	//	})
-	//}
-	//
-	//static async resourceSetAvailable(resource: ResourceDto): Promise<ResourceDto> {
-	//	return httpClient.put('/resources/available', resource).then((response) => {
-	//		return new ResourceDto(response.data)
-	//	})
-	//}
-
 	static async deleteResource(resource: ResourceDto): Promise<void> {
 		return httpClient.delete(`/resources/delete/${resource.id}`)
 	}
@@ -91,7 +78,9 @@ export default class RemoteService {
 		})
 	}
 
-	static async deleteReservation(reservation: ReservationDto): Promise<void> {
-		return httpClient.delete(`/reservations/delete/${reservation.id}`)
+	static async cancelReservation(reservation: ReservationDto): Promise<ReservationDto> {
+		return httpClient.put('/reservations/cancel', reservation).then((response) => {
+			return new ReservationDto(response.data)
+		})
 	}
 }

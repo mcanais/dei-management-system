@@ -32,20 +32,33 @@
 					></v-autocomplete>
 					
 					<!-- Date selection !-->
-					<p class="ml-2 mt-2 mb-2">{{ label }}</p>
+					<p class="ml-2 mt-2 mb-3">{{ label }}</p>
 
-					<v-date-picker 
-						v-model="dateInterval"
-						multiple="range"
-						:min="getRelativeDate(-1)"
-						:allowed-dates="doesntOverlapReservations"
-						:hide-header="true"
-						@click="updateTextFields"
-					/>
+					<div class="d-flex justify-center">
+						<v-date-picker 
+							v-model="dateInterval"
+							multiple="range"
+							:min="getRelativeDate(-1)"
+							:max="getRelativeDate(365)"
+							:allowed-dates="doesntOverlapReservations"
+							:hide-header="true"
+							color="primary"
+							style="border: 1px solid #ddd;"
+							@click="updateTextFields"
+						/>
+					</div>
 
-					<Transition name="fade">
-						<p class="reservation-label" v-if="newReservation.startDate != ''">{{ newReservation.startDate }} - {{ newReservation.finishDate}} </p>
-					</Transition>
+					<div class="d-flex mt-3 ml-6">
+						<p class="mb-1">Duração:</p>
+						<Transition name="fade">
+							<p 
+								v-if="newReservation.startDate != '' && validReservation == true"
+								class="ml-2 pl-3 pr-3" 
+								style="border: 1px solid #ddd; border-radius: 15px; text-align: center;"
+							>{{ newReservation.startDate }} - {{ newReservation.finishDate}}
+							</p>
+						</Transition>
+					</div>
 
 				</v-card-text>
 
@@ -63,7 +76,7 @@
 					></v-btn>
 
 					<v-btn
-						text="Salvar"
+						text="Adicionar"
 						color="primary"
 						:disabled="!valid"
 						@click="
@@ -103,6 +116,7 @@ const props = defineProps({
 const istIdSelected = ref('')
 
 const dateInterval = ref([])
+const validReservation = ref(false)
 
 const newReservation = reactive<ReservationDto>({
 	startDate: '',
@@ -141,9 +155,9 @@ function updateTextFields() {
 	newReservation.startDate = getStringFromDate(dateInterval.value[0])
 	newReservation.finishDate = getStringFromDate(dateInterval.value[dateInterval.value.length-1])
 
-	// TODO: extra validation step so the date interval doesnt overlap
+	validReservation.value = !intervalOverlapsReservations(newReservation)
 
-	valid.value = (props.maintenance == true || (istIdSelected.value != '' && istIdSelected.value != null))
+	valid.value = (props.maintenance == true || (istIdSelected.value != '' && istIdSelected.value != null)) && validReservation.value == true
 }
 
 const assignReservation = async () => {
@@ -167,9 +181,12 @@ async function getPersonIds() {
 }
 
 
+// True if the date doesnt overlap with the reservations
 function doesntOverlapReservations(date: Date): boolean {
 	for (const reservation of props.resource.reservations) {
-		// TODO: skip if the reservation is finished or cancelled
+		if (reservation.state == 'FINISHED' || reservation.state == 'CANCELLED') {
+			continue
+		}
 
 		var reservationStartDate = getDateFromString(reservation.startDate)
 		var reservationFinishDate = getDateFromString(reservation.finishDate)
@@ -180,6 +197,29 @@ function doesntOverlapReservations(date: Date): boolean {
 	}
 
 	return true
+}
+
+
+// True if the interval overlaps with the reservations
+function intervalOverlapsReservations(interval): boolean {
+	for (const reservation of props.resource.reservations) {
+		if (reservation.state == 'FINISHED' || reservation.state == 'CANCELLED') {
+			continue
+		}
+
+		var intervalStartDate = getDateFromString(interval.startDate)
+		var intervalFinishDate = getDateFromString(interval.finishDate)
+
+		var reservationStartDate = getDateFromString(reservation.startDate)
+		var reservationFinishDate = getDateFromString(reservation.finishDate)
+
+		if (intervalStartDate <= reservationFinishDate 
+			&& intervalFinishDate >= reservationStartDate) {
+			return true
+		}
+	}
+
+	return false
 }
 
 const istIdRules = [
@@ -200,10 +240,6 @@ const istIdRules = [
 
 
 .reservation-label {
-	border: 1px solid #ddd;
-	border-radius: 15px;
-	margin: 5px 35px;
-	text-align: center;
 }
 
 </style>

@@ -39,6 +39,11 @@ public class ReservationController {
 		return reservationService.assignMaintenance(reservationDto, resourceId);
 	}
 
+	@PutMapping("/cancel")
+	public ReservationDto cancelReservation(@RequestBody ReservationDto reservationDto) {
+		return reservationService.cancelReservation(reservationDto);
+	}
+
 	@DeleteMapping("/delete/{reservationId}")
 	public void deleteReservation(@PathVariable Long reservationId) {
 		reservationService.deleteReservation(reservationId);

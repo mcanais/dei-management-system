@@ -50,16 +50,3 @@ export function isFutureDate(s1, s2): bool {
 
 	return date > date2
 }
-
-
-// Verifies if the new reservation overlaps with the existing reservations
-export function overlappingReservations(reservations, newReservation) {
-	for (const reservation of reservations) {
-		if (isPastDate(newReservation.startDate, reservation.finishDate) &&
-				isFutureDate(newReservation.finishDate,reservation.startDate)) {
-			return true
-		}
-	}
-
-	return false
-}

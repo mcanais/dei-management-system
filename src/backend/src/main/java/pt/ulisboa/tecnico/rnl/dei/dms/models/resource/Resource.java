@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.Reservation;
 import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationType;
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationState;
 
 @Getter
 @Setter
@@ -49,6 +50,10 @@ public class Resource {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 		for (Reservation reservation : this.reservations) {
+			if (reservation.getState() == ReservationState.FINISHED || reservation.getState() == ReservationState.CANCELLED) {
+				continue;
+			}
+
 			LocalDate startDate = LocalDate.parse(reservation.getStartDate(), formatter); 
 			LocalDate finishDate = LocalDate.parse(reservation.getFinishDate(), formatter); 
 			LocalDate currentDate = LocalDate.now();

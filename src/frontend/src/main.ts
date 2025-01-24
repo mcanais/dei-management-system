@@ -53,7 +53,7 @@ const vuetify = createVuetify({
       dark: {
         dark: true,
         colors: {
-          primary: '#FFFFFF', // white
+          primary: '#2196F3', // white
           secondary: '#424242', // grey
           accent: '#82B1FF', // light blue
           error: '#FF5252', // red

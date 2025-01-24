@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.Reservation;
 import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationType;
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationState;
 import pt.ulisboa.tecnico.rnl.dei.dms.dtos.ReservationDto;
 import pt.ulisboa.tecnico.rnl.dei.dms.repository.ReservationRepository;
 import pt.ulisboa.tecnico.rnl.dei.dms.mappers.ReservationMapper;
@@ -71,23 +72,36 @@ public class ReservationService {
 
 		person.addReservation(reservation);
 		resource.addReservation(reservation);
+
 		reservation.setAssignedResourceId(resource.getId());
 		reservation.setType(ReservationType.PERSON);
-		
+		reservation.updateState();
 		resource.updateState();
-
+		
 		reservationRepository.save(reservation);
         return reservationMapper.reservationToDto(reservation);
 	}
 
 	public ReservationDto assignMaintenance(ReservationDto reservationDto, Long resourceId) {
-		Resource resource = resourceRepository.findById(resourceId).get();
 		Reservation reservation = reservationMapper.dtoToReservation(reservationDto);
+		Resource resource = resourceRepository.findById(resourceId).get();
 
 		resource.addReservation(reservation);
+
 		reservation.setAssignedResourceId(resource.getId());
 		reservation.setType(ReservationType.MAINTENANCE);
+		reservation.updateState();
+		resource.updateState();
 
+		reservationRepository.save(reservation);
+		return reservationMapper.reservationToDto(reservation);
+	}
+
+	public ReservationDto cancelReservation(ReservationDto reservationDto) {
+		Reservation reservation = reservationRepository.findById(reservationDto.getId()).get();
+		Resource resource = resourceRepository.findById(reservation.getAssignedResourceId()).get();
+
+		reservation.setState(ReservationState.CANCELLED);
 		resource.updateState();
 
 		reservationRepository.save(reservation);
@@ -97,5 +111,4 @@ public class ReservationService {
     public void deleteReservation(Long reservationId) {
         reservationRepository.deleteById(reservationId);
     }
-
 }

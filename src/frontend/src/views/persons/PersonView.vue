@@ -24,6 +24,7 @@
 		:items="persons"
 		:search="search"
 		:custom-filter="fuzzySearch"
+		no-data-text="Ainda não existem pessoas na base de dados"
 		class="text-left"
 	>
 		<template v-slot:[`item.id`]="{ item }">

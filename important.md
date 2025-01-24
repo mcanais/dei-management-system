@@ -5,6 +5,9 @@ Things to FIX:
 	- Fix historic view updating imediately
 	- Improve overall look
 	- Dashboard with introduction and statistics
+    - Tooltips on icons
+    - Person profile and resource profile
+    - Move the action icons into buttons
  - Backend:
  	- Input verification
 	- Fix reservation state to include "finished" and "cancelled"

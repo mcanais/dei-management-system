@@ -24,6 +24,7 @@
 		:items="resources"
 		:search="search"
 		:custom-filter="fuzzySearch"
+		no-data-text="Ainda não existem recursos na base de dados"
 		class="text-left"
 	>
 		<template v-slot:[`item.type`]="{ item }">
