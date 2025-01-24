@@ -1,100 +1,107 @@
 <template>
-	<div>
-		<v-dialog v-model="dialog" max-width="400">
-			<template v-slot:activator="{ props: activatorProps }">
-				<v-icon
+	<v-dialog v-model="dialog" max-width="400">
+		<template v-slot:activator="{ props: activatorProps }">
+			<v-btn
+				v-if="!props.maintenance"
+				v-bind="activatorProps"
+				class="mr-2 pa-1"
+				density="comfortable"
+				variant="outlined"
+				size="small"
+				icon="mdi-account-plus"
+				@click="initialize"
+			/>
+
+			<v-icon
+				v-else
+				v-bind="activatorProps"
+				class="mr-2"
+				@click="initialize"
+			>mdi-cog</v-icon>
+		</template>
+
+		<v-card prepend-icon="mdi-briefcase" :title="title">
+			<v-card-text>
+				<!-- Persons list !-->
+				<v-autocomplete
 					v-if="!props.maintenance"
-					v-bind="activatorProps"
-					class="mr-2"
-					@click="initialize"
-				>mdi-account-plus</v-icon>
+					label="IST ID da Pessoa"
+					v-model="istIdSelected"
+					:items="personIds"
+					:rules="istIdRules"
+					@update:model-value="updateTextFields"
+					required
+					class="mb-2"
+				></v-autocomplete>
+				
+				<!-- Date selection !-->
+				<p class="ml-2 mt-2 mb-3">{{ label }}</p>
 
-				<v-icon
-					v-else
-					v-bind="activatorProps"
-					class="mr-2"
-					@click="initialize"
-				>mdi-cog</v-icon>
-			</template>
-
-			<v-card prepend-icon="mdi-briefcase" :title="title">
-				<v-card-text>
-					<!-- Persons list !-->
-					<v-autocomplete
-						v-if="!props.maintenance"
-						label="IST ID da Pessoa"
-						v-model="istIdSelected"
-						:items="personIds"
-						:rules="istIdRules"
-						@update:model-value="updateTextFields"
-						required
-						class="mb-2"
-					></v-autocomplete>
-					
-					<!-- Date selection !-->
-					<p class="ml-2 mt-2 mb-3">{{ label }}</p>
-
-					<div class="d-flex justify-center">
-						<v-date-picker 
-							v-model="dateInterval"
-							multiple="range"
-							:min="getRelativeDate(-1)"
-							:max="getRelativeDate(365)"
-							:allowed-dates="doesntOverlapReservations"
-							:hide-header="true"
-							color="primary"
-							style="border: 1px solid #ddd;"
-							@click="updateTextFields"
-						/>
-					</div>
-
-					<div class="d-flex mt-3 ml-6">
-						<p class="mb-1">Duração:</p>
-						<Transition name="fade">
-							<p 
-								v-if="newReservation.startDate != '' && validReservation == true"
-								class="ml-2 pl-3 pr-3" 
-								style="border: 1px solid #ddd; border-radius: 15px; text-align: center;"
-							>{{ newReservation.startDate }} - {{ newReservation.finishDate}}
-							</p>
-						</Transition>
-					</div>
-
-				</v-card-text>
-
-				<v-divider></v-divider>
-
-				<v-card-actions>
-					<v-spacer></v-spacer>
-
-					<v-btn 
-						text="Cancelar" 
-						variant="plain" 
-						@click="
-						dialog = false;
-						"
-					></v-btn>
-
-					<v-btn
-						text="Adicionar"
+				<div class="d-flex justify-center">
+					<v-date-picker 
+						v-model="dateInterval"
+						multiple="range"
+						:min="getRelativeDate(-1)"
+						:max="getRelativeDate(365)"
+						:allowed-dates="doesntOverlapReservations"
+						:hide-header="true"
 						color="primary"
-						:disabled="!valid"
-						@click="
-						dialog = false;
-						assignReservation()
-						"
-					></v-btn>
-				</v-card-actions>
-			</v-card>
-		</v-dialog>
-	</div>
+						style="border: 1px solid #ddd;"
+						@click="updateTextFields"
+					/>
+				</div>
+
+				<div class="d-flex mt-3 ml-6">
+					<p class="mb-1">Duração:</p>
+					<Transition name="fade">
+						<p 
+							v-if="newReservation.startDate != '' && validReservation == true"
+							class="ml-2 pl-3 pr-3" 
+							style="border: 1px solid #ddd; border-radius: 15px; text-align: center;"
+						>{{ newReservation.startDate }} - {{ newReservation.finishDate}}
+						</p>
+					</Transition>
+				</div>
+
+			</v-card-text>
+
+			<v-divider></v-divider>
+
+			<v-card-actions>
+				<v-spacer></v-spacer>
+
+				<v-btn 
+					text="Cancelar" 
+					variant="plain" 
+					@click="
+					dialog = false;
+					"
+				></v-btn>
+
+				<v-btn
+					text="Adicionar"
+					color="primary"
+					:disabled="!valid"
+					@click="
+					dialog = false;
+					assignReservation()
+					"
+				></v-btn>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
 </template>
 
 <script setup lang="ts">
 
 import { ref, reactive } from 'vue'
-import type ReservationDto from '@/models/dtos'
+
 import RemoteService from '@/services/RemoteService'
+
+import type ReservationDto from '@/models/dtos'
+import type ResourceDto from '@/models/dtos'
+import type PersonDto from '@/models/dtos'
+
 import { validDate } from '@/lib/regExpressions'
 import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
 
@@ -109,11 +116,16 @@ const label = ref('')
 const emit = defineEmits(['reservation-assigned'])
 
 const props = defineProps({
+	maintenance: {
+		type: Boolean,
+		default: false,
+	},
 	resource: Object,
-	maintenance: Boolean,
+	person: Object
 })
 
 const istIdSelected = ref('')
+const resouceIdSelected = ref('')
 
 const dateInterval = ref([])
 const validReservation = ref(false)
@@ -124,6 +136,7 @@ const newReservation = reactive<ReservationDto>({
 })
 
 const personIds = reactive([])
+const resourceIds = reactive([])
 
 
 function initialize() {
@@ -231,15 +244,12 @@ const istIdRules = [
 <style scoped>
 
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
+	transition: opacity 0.3s ease;
 }
 
 .fade-enter-from, .fade-leave-to {
-  opacity: 0;
+	opacity: 0;
 }
 
-
-.reservation-label {
-}
 
 </style>

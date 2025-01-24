@@ -1,28 +1,33 @@
 <template>
 	<v-dialog v-model="dialog" max-width="400">
 		<template v-slot:activator="{ props: activatorProps }">
-			<!-- Remove Person Icon !-->
-			<v-icon
+			<!-- Remove Object Icon !-->
+			<v-btn
 				v-if="props.buttonText != true"
 				v-bind="activatorProps"
-				class="mr-5"
-			>mdi-delete</v-icon>
+				class="mr-2 pa-1"
+				density="comfortable"
+				variant="outlined"
+				size="small"
+				color="error"
+				icon="mdi-delete"
+			/>
 
-			<!-- Remove Person Button !-->
+			<!-- Remove Object Text Button !-->
 			<v-btn
 				v-else
 				v-bind="activatorProps"
 				prepend-icon="mdi-delete"
 				color="error"
-				text="Remover Pessoa"
+				:text="props.title"
 				density="comfortable"
 				variant="text"
 				style="text-transform: none;"
 			/>
 		</template>
 
-		<v-card prepend-icon="mdi-account" title="Remover Pessoa">
-			<v-card-text>Tem a certeza que quer remover esta pessoa?</v-card-text>
+		<v-card :prepend-icon="props.icon" :title="props.title">
+			<v-card-text>{{ props.text }}</v-card-text>
 
 			<v-divider></v-divider>
 
@@ -30,7 +35,7 @@
 				<v-spacer></v-spacer>
 
 				<v-btn 
-					text="Cancelar" 
+					:text="props.cancelText"
 					variant="plain" 
 					@click="
 					dialog = false;
@@ -38,11 +43,11 @@
 				></v-btn>
 
 				<v-btn
-					text="Remover"
+					:text="props.submitText"
 					color="error"
 					@click="
 					dialog = false;
-					removePerson()
+					emit('remove-object')
 					"
 				></v-btn>
 			</v-card-actions>
@@ -53,26 +58,24 @@
 <script setup lang="ts">
 
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import RemoteService from '@/services/RemoteService'
-
-const router = useRouter()
-
 
 const dialog = ref(false)
 
-const emit = defineEmits(['person-removed'])
+const emit = defineEmits(['remove-object'])
 
 const props = defineProps({
-	person: Object,
-	buttonText: Boolean || null,
+	buttonText: Boolean,
+	title: String,
+	text: String,
+	icon: String,
+	submitText: {
+		type: String,
+		default: "Remover"
+	},
+	cancelText: {
+		type: String,
+		default: "Cancelar"
+	},
 })
-
-function removePerson() {
-	RemoteService.deletePerson(props.person).then(() => {
-		emit('person-removed')
-		router.push(`/persons`)
-	})
-}
 
 </script>

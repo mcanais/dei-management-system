@@ -65,6 +65,7 @@ export default class RemoteService {
 		return httpClient.delete(`/resources/delete/${resource.id}`)
 	}
 	
+	
 	// ------------------- Reservations -------------------
 	static async assignReservation(reservationDto: ReservationDto, personId: string, resourceId: string) {
 		return httpClient.put(`/reservations/assign/${personId}/${resourceId}`, reservationDto).then((response) => {

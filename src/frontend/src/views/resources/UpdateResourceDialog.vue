@@ -14,13 +14,30 @@
 					@click="initialize"
 				></v-btn>
 
-				<!-- Edit Resource Button !-->
-				<v-icon
+				<!-- Edit Resource Icon !-->
+				<v-btn
+					v-else-if="props.buttonText != true"
+					v-bind="activatorProps"
+					class="mr-2 pa-1"
+					density="comfortable"
+					variant="outlined"
+					size="small"
+					color="primary"
+					icon="mdi-pencil"
+					@click="initialize"
+				/>
+
+				<!-- Edit Resource Text Button !-->
+				<v-btn
 					v-else
 					v-bind="activatorProps"
-					class="mr-2"
+					prepend-icon="mdi-pencil"
+					text="Editar Recurso"
+					density="comfortable"
+					variant="text"
+					style="text-transform: none;"
 					@click="initialize"
-				>mdi-pencil</v-icon>
+				/>
 			</template>
 
 			<v-form v-model="valid" @submit.prevent="onSubmit">
@@ -112,6 +129,7 @@ const saveButtonText = ref('')
 
 const props = defineProps({
 	resource: Object || null,
+	buttonText: Boolean || null,
 })
 
 const createResource = async () => {
@@ -142,6 +160,8 @@ function initialize() {
 	} else {
 		title.value = 'Novo Recurso'
 		saveButtonText.value = 'Adicionar'
+
+		resetResource()
 	}
 }
 

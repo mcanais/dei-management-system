@@ -1,5 +1,8 @@
 <template>
-	<h2 class="text-left ml-1 mb-3">Perfil Pessoa</h2>
+	<div class="d-flex flex-column align-start">
+		<v-btn text="Voltar" @click="router.push(`/persons`)" class="mb-1 pa-1" density="comfortable" variant="text" prepend-icon="mdi-subdirectory-arrow-left"/>
+		<h2 class="text-left ml-1 mb-3">Perfil Pessoa</h2>
+	</div>
 
 	<div class="profile-container">
 		<div class="left-container text-left">
@@ -17,10 +20,12 @@
 				:buttonText="true" 
 				@person-updated="getPersonData"
 			/>
-			<RemovePersonDialog 
-				:person="tempPerson" 
+			<RemoveObjectDialog 
+				@remove-object="removePerson(tempPerson)"
 				:buttonText="true"
-				@person-updated="getPersonData"
+				title="Remover Pessoa"
+				text="Tem a certeza que quer remover esta pessoa?"
+				icon="mdi-account"
 			/>
 		</div>
 
@@ -31,13 +36,18 @@
 				<v-data-table
 					:headers="headersReservations"
 					:items="validReservations"
-					:min="getRelativeDate(-1)"
-					class="text-left w-auto"
 					no-data-text="Sem reservas"
-					style="flex-grow: 1;"
+					class="text-left w-auto"
 				>
 					<template v-slot:[`item.actions`]="{ item }">
-						<CancelReservationDialog @reservation-cancelled="getPersonData" :reservation="item"/>
+						<RemoveObjectDialog 
+							@remove-object="cancelReservation(item)"
+							title="Cancelar Reserva"
+							text="Tem a certeza que quer cancelar esta reserva?"
+							icon="mdi-calendar"
+							submitText="Sim"
+							cancelText="Não"
+						/>
 					</template>
 
 					<template v-slot:[`item.state`]="{ item }">
@@ -68,21 +78,23 @@
 <script setup lang="ts">
 
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 import RemoteService from '@/services/RemoteService'
 
 import type PersonDto from '@/models/dtos'
 import type ReservationDto from '@/models/dtos'
+
 import { personRoles } from '@/models/person/PersonRoles'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
 
 import UpdatePersonDialog from '@/views/persons/UpdatePersonDialog.vue'
-import RemovePersonDialog from '@/views/persons/RemovePersonDialog.vue'
+import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 import ReservationStateChip from '@/views/reservations/ReservationStateChip.vue'
-import CancelReservationDialog from '@/views/reservations/CancelReservationDialog.vue'
 
 const search = ref('')
+const router = useRouter()
 
 const props = defineProps({
 	personId: String
@@ -136,6 +148,18 @@ async function getPersonData() {
 	})
 }
 
+
+function removePerson(person) {
+	RemoteService.deletePerson(person).then(() => {
+		router.push(`/persons`)
+	})
+}
+
+async function cancelReservation(reservation) {
+	RemoteService.cancelReservation(reservation).then(async (data) => {
+		getPersonData()
+	})
+}
 
 function updateReservations() {
 	validReservations.splice(0, validReservations.length)

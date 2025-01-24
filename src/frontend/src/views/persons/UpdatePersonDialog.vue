@@ -15,14 +15,19 @@
 				/>
 
 				<!-- Edit Person Icon !-->
-				<v-icon
+				<v-btn
 					v-else-if="props.buttonText != true"
 					v-bind="activatorProps"
-					class="mr-2"
+					class="mr-2 pa-1"
+					density="comfortable"
+					variant="outlined"
+					size="small"
+					color="primary"
+					icon="mdi-pencil"
 					@click="initialize"
-				>mdi-pencil</v-icon>
+				/>
 
-				<!-- Edit Person Button !-->
+				<!-- Edit Person Text Button !-->
 				<v-btn
 					v-else
 					v-bind="activatorProps"
@@ -157,6 +162,8 @@ function initialize() {
 	} else {
 		title.value = 'Nova Pessoa'
 		saveButtonText.value = 'Adicionar'
+
+		resetPerson()
 	}
 }
 

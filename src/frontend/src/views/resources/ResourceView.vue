@@ -38,10 +38,13 @@
 		<template v-slot:[`item.actions`]="{ item }">
 			<v-row align="center">
 				<UpdateResourceDialog @resource-updated="getResources" :resource="item"/>
-				<RemoveResourceDialog @resource-removed="getResources" :resource="item"/>
+				<RemoveObjectDialog @remove-object="removeResource(item)" 
+					title="Remover Recurso"
+					text="Tem a certeza que quer remover este recurso?"
+					icon="mdi-briefcase"
+				/>
 				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="false"/>
 				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="true"/>
-				<!--MaintenanceDialog @maintenance-assigned="getResources" :resource="item"/!-->
 			</v-row>
 		</template>
 	</v-data-table>
@@ -55,12 +58,12 @@ import { ref, reactive } from 'vue'
 
 import RemoteService from '@/services/RemoteService'
 
-import UpdateResourceDialog from '@/views/resources/UpdateResourceDialog.vue'
-//import EditResourceDialog from '@/views/resources/EditResourceDialog.vue'
-import RemoveResourceDialog from '@/views/resources/RemoveResourceDialog.vue'
-import AssignReservationDialog from '@/views/resources/AssignReservationDialog.vue'
-//import MaintenanceDialog from '@/views/resources/MaintenanceDialog.vue'
 import type ResourceDto from '@/models/dtos'
+
+import UpdateResourceDialog from '@/views/resources/UpdateResourceDialog.vue'
+import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
+import AssignReservationDialog from '@/views/reservations/AssignReservationDialog.vue'
+
 import { resourceTypes } from '@/models/resource/ResourceTypes'
 import { resourceStates } from '@/models/resource/ResourceStates'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
@@ -89,6 +92,12 @@ async function getResources() {
 		data.forEach((resource: ResourceDto) => {
 			resources.push(resource)
 		})
+	})
+}
+
+function removeResource(resource) {
+	RemoteService.deleteResource(resource).then(() => {
+		getResources()
 	})
 }
 

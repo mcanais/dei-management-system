@@ -41,7 +41,12 @@
 		<template v-slot:[`item.actions`]="{ item }">
 			<v-row align="center">
 				<UpdatePersonDialog @person-updated="getPersons" :person="item"/>
-				<RemovePersonDialog @person-removed="getPersons" :person="item"/>
+				<RemoveObjectDialog 
+					@remove-object="removePerson(item)" 
+					title="Remover Pessoa"
+					text="Tem a certeza que quer remover esta pessoa?"
+					icon="mdi-account"
+				/>
 			</v-row>
 		</template>
 	</v-data-table>
@@ -61,7 +66,8 @@ import { personRoles } from '@/models/person/PersonRoles'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 
 import UpdatePersonDialog from '@/views/persons/UpdatePersonDialog.vue'
-import RemovePersonDialog from '@/views/persons/RemovePersonDialog.vue'
+//import RemovePersonDialog from '@/views/persons/RemovePersonDialog.vue'
+import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 
 
 const search = ref('')
@@ -81,7 +87,7 @@ const persons: PersonDto[] = reactive([])
 getPersons()
 
 async function getPersons() {
-	persons.splice(0, persons.length) // Remove everything from persons
+	persons.splice(0, persons.length)
 
 	RemoteService.getPersons().then(async (data) => {
 		data.forEach((person: PersonDto) => {
@@ -92,6 +98,12 @@ async function getPersons() {
 
 function toPersonProfilePath(personId) {
 	router.push(`/persons/${personId}`)
+}
+
+function removePerson(person) {
+	RemoteService.deletePerson(person).then(() => {
+		getPersons()
+	})
 }
 
 

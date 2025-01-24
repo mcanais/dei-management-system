@@ -1,6 +1,6 @@
 <template>
 	<v-app-bar>
-		<div class="dei-label">
+		<div class="ist-logo">
 			<img src="@/images/ist-logo.svg" class="ist-logo"></img>
 		</div>
 
@@ -33,21 +33,11 @@ const navbarItems = [
 
 <style scoped>
 
-.dei-label {
-	display: flex;
-	justify-content: center;
-	margin-left: 30px;
-}
-
 .ist-logo {
 	display: flex;
-	justify-content: space-between;
-	align-items: center
-}
-
-.dei-title {
-	text-align: left;
-
+	justify-content: center;
+	margin-left: 5%;
+	margin-right: 5%;
 }
 
 .navbar {
@@ -55,7 +45,7 @@ const navbarItems = [
 	justify-content: center;
 	position: absolute;
 	left: 50%;
-	transform: translateX(-50%); 
+	transform: translateX(-50%);
 }
 
 .nav-button {
@@ -64,6 +54,11 @@ const navbarItems = [
 
 .nav-button:hover {
 	background-color: rgba(245,245,245 ,0.5);
+}
+
+@media (max-width: 620px) {
+	.nav-button {
+	}
 }
 
 </style>
