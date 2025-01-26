@@ -5,7 +5,7 @@
 		</v-col>
 
 		<v-col cols="auto">
-			<UpdatePersonDialog @person-updated="getPersons" />
+			<CreatePersonDialog @person-updated="getPersons" />
 		</v-col>
 	</v-row>
 
@@ -30,7 +30,7 @@
 		<template v-slot:[`item.id`]="{ item }">
 			<button 
 				class="id-button" 
-				@click="toPersonProfilePath(item.id)"
+				@click="router.push(`/persons/${item.id}`)"
 			>{{ item.id }}</button>
 		</template>
 
@@ -39,15 +39,15 @@
 		</template>
 
 		<template v-slot:[`item.actions`]="{ item }">
-			<v-row align="center">
-				<UpdatePersonDialog @person-updated="getPersons" :person="item"/>
+			<div class="d-flex">
+				<CreatePersonDialog @person-updated="getPersons" :person="item"/>
 				<RemoveObjectDialog 
 					@remove-object="removePerson(item)" 
 					title="Remover Pessoa"
 					text="Tem a certeza que quer remover esta pessoa?"
 					icon="mdi-account"
 				/>
-			</v-row>
+			</div>
 		</template>
 	</v-data-table>
 
@@ -65,8 +65,7 @@ import type PersonDto from '@/models/dtos'
 import { personRoles } from '@/models/person/PersonRoles'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 
-import UpdatePersonDialog from '@/views/persons/UpdatePersonDialog.vue'
-//import RemovePersonDialog from '@/views/persons/RemovePersonDialog.vue'
+import CreatePersonDialog from '@/views/persons/CreatePersonDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 
 
@@ -96,9 +95,6 @@ async function getPersons() {
 	})
 }
 
-function toPersonProfilePath(personId) {
-	router.push(`/persons/${personId}`)
-}
 
 function removePerson(person) {
 	RemoteService.deletePerson(person).then(() => {
@@ -108,17 +104,3 @@ function removePerson(person) {
 
 
 </script>
-
-<style scoped>
-
-.id-button {
-	text-decoration: underline;
-	color: #2196F3;
-	transition: color 0.2s ease;
-}
-
-.id-button:hover {
-	color: #215cf3;
-}
-
-</style>

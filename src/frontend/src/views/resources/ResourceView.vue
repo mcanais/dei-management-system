@@ -5,7 +5,7 @@
 		</v-col>
 
 		<v-col cols="auto">
-			<UpdateResourceDialog @resource-updated="getResources" />
+			<CreateResourceDialog @resource-updated="getResources" />
 		</v-col>
 	</v-row>
 
@@ -27,6 +27,13 @@
 		no-data-text="Ainda não existem recursos na base de dados"
 		class="text-left"
 	>
+		<template v-slot:[`item.id`]="{ item }">
+			<button 
+				class="id-button" 
+				@click="router.push(`/resources/${item.id}`)"
+			>{{ item.id }}</button>
+		</template>
+
 		<template v-slot:[`item.type`]="{ item }">
 			<span>{{ getItemValue(resourceTypes, item.type) }}</span>
 		</template>
@@ -36,8 +43,8 @@
 		</template>
 
 		<template v-slot:[`item.actions`]="{ item }">
-			<v-row align="center">
-				<UpdateResourceDialog @resource-updated="getResources" :resource="item"/>
+			<div class="d-flex">
+				<CreateResourceDialog @resource-updated="getResources" :resource="item"/>
 				<RemoveObjectDialog @remove-object="removeResource(item)" 
 					title="Remover Recurso"
 					text="Tem a certeza que quer remover este recurso?"
@@ -45,7 +52,7 @@
 				/>
 				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="false"/>
 				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="true"/>
-			</v-row>
+			</div>
 		</template>
 	</v-data-table>
 
@@ -55,12 +62,13 @@
 <script setup lang="ts">
 
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 import RemoteService from '@/services/RemoteService'
 
 import type ResourceDto from '@/models/dtos'
 
-import UpdateResourceDialog from '@/views/resources/UpdateResourceDialog.vue'
+import CreateResourceDialog from '@/views/resources/CreateResourceDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 import AssignReservationDialog from '@/views/reservations/AssignReservationDialog.vue'
 
@@ -69,6 +77,7 @@ import { resourceStates } from '@/models/resource/ResourceStates'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 
 
+const router = useRouter()
 const search = ref('')
 
 const headers = [

@@ -25,7 +25,15 @@
 					color="primary"
 					icon="mdi-pencil"
 					@click="initialize"
-				/>
+				>
+					<v-icon/>
+					<v-tooltip
+						activator="parent"
+						location="bottom"
+						offset="5"
+						text="Editar Pessoa"
+					/>
+				</v-btn>
 
 				<!-- Edit Person Text Button !-->
 				<v-btn

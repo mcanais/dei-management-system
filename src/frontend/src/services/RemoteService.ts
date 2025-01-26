@@ -49,6 +49,12 @@ export default class RemoteService {
 		})
 	}
 
+	static async getResource(resourceId: string): Promise<ResourceDto> {
+		return httpClient.get(`/resources/${resourceId}`).then((response) => {
+			return new ResourceDto(response.data)
+		})
+	}
+
 	static async createResource(resource: ResourceDto): Promise<ResourceDto> {
 		return httpClient.post('/resources/create', resource).then((response) => {
 			return new ResourceDto(response.data)

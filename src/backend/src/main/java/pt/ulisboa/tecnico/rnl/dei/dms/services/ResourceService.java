@@ -48,11 +48,11 @@ public class ResourceService {
 		return resourceMapper.resourcesToDtos(resources);
     }
 
-    public ResourceDto getResourceById(Long resourceId) {
+    public ResourceDto getResource(Long resourceId) {
         Resource resource = resourceRepository.findById(resourceId).get();
 
 		return resourceMapper.resourceToDto(resource);
-	}
+    }
 
     public ResourceDto updateResource(ResourceDto resourceDto) {
         Resource resource = resourceRepository.findById(resourceDto.getId()).get();

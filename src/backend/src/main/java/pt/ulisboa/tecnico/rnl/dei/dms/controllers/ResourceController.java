@@ -19,9 +19,9 @@ public class ResourceController {
 		return resourceService.getResources();
 	}
 
-	@GetMapping(value = "/get/{resourceId}", produces = "application/json; charset=utf-8")
-	public ResourceDto getResourceById(@PathVariable Long resourceId) {
-		return resourceService.getResourceById(resourceId);
+	@GetMapping(value = "/{resourceId}", produces = "application/json; charset=utf-8")
+	public ResourceDto getResource(@PathVariable Long resourceId) {
+		return resourceService.getResource(resourceId);
 	}
 
 	@PostMapping("/create")

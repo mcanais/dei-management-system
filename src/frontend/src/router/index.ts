@@ -4,6 +4,7 @@ import HomeView from '@/views/HomeView.vue'
 import PersonView from '@/views/persons/PersonView.vue'
 import PersonProfileView from '@/views/persons/PersonProfileView.vue'
 import ResourceView from '@/views/resources/ResourceView.vue'
+import ResourceProfileView from '@/views/resources/ResourceProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,12 @@ const router = createRouter({
       path: '/resources',
       name: 'resources',
       component: ResourceView
+    },
+    {
+      path: '/resources/:resourceId',
+      name: 'resourceProfile',
+      component: ResourceProfileView,
+	  props: true
     },
     {
       path: '/register',

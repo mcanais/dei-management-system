@@ -11,7 +11,15 @@
 				size="small"
 				color="error"
 				icon="mdi-delete"
-			/>
+			>
+				<v-icon/>
+				<v-tooltip
+					activator="parent"
+					location="bottom"
+					offset="5"
+					:text="title"
+				/>
+			</v-btn>
 
 			<!-- Remove Object Text Button !-->
 			<v-btn

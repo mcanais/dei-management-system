@@ -33,20 +33,3 @@ export function getRelativeDate(n: number): Date {
 	return todayDate
 }
 
-
-// Verifies if the date of s1 comes before the date of s2
-export function isPastDate(s1, s2): bool {
-	const date = getDateFromString(s1)
-	const date2 = getDateFromString(s2)
-
-	return date < date2
-}
-
-
-// Verifies if the date of s1 comes after the date of s2
-export function isFutureDate(s1, s2): bool {
-	const date = getDateFromString(s1)
-	const date2 = getDateFromString(s2)
-
-	return date > date2
-}

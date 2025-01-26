@@ -10,14 +10,34 @@
 				size="small"
 				icon="mdi-account-plus"
 				@click="initialize"
-			/>
+			>
+				<v-icon/>
+				<v-tooltip
+					activator="parent"
+					location="bottom"
+					offset="5"
+					text="Reserva"
+				/>
+			</v-btn>
 
-			<v-icon
+			<v-btn
 				v-else
 				v-bind="activatorProps"
-				class="mr-2"
+				class="mr-2 pa-1"
+				density="comfortable"
+				variant="outlined"
+				size="small"
+				icon="mdi-cog"
 				@click="initialize"
-			>mdi-cog</v-icon>
+			>
+				<v-icon/>
+				<v-tooltip
+					activator="parent"
+					location="bottom"
+					offset="5"
+					text="Manutenção"
+				/>
+			</v-btn>
 		</template>
 
 		<v-card prepend-icon="mdi-briefcase" :title="title">

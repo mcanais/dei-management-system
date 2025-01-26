@@ -10,7 +10,6 @@ export function getItemKey(rec: Record<string,string>, value: string): string {
 	}
 }
 
-
 export function fuzzySearch(value: string, search: string) {
 	// Regex to match any character in between the search characters
 	let searchRegex = new RegExp(search.split('').join('.*'), 'i')

@@ -1,5 +1,5 @@
 <template>
-	<div class="text-center">
+	<div>
 		<v-dialog v-model="dialog" max-width="400">
 			<template v-slot:activator="{ props: activatorProps }">
 				<!-- Create Resource Button !-->
@@ -12,7 +12,7 @@
 					color="primary"
 					rounded="xl"
 					@click="initialize"
-				></v-btn>
+				/>
 
 				<!-- Edit Resource Icon !-->
 				<v-btn
@@ -25,7 +25,15 @@
 					color="primary"
 					icon="mdi-pencil"
 					@click="initialize"
-				/>
+				>
+					<v-icon/>
+					<v-tooltip
+						activator="parent"
+						location="bottom"
+						offset="5"
+						text="Editar Pessoa"
+					/>
+				</v-btn>
 
 				<!-- Edit Resource Text Button !-->
 				<v-btn

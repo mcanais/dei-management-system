@@ -1,49 +1,52 @@
 <template>
 	<div class="d-flex flex-column align-start">
-		<v-btn text="Voltar" @click="router.push(`/persons`)" class="mb-2 pa-1" density="comfortable" variant="text" prepend-icon="mdi-subdirectory-arrow-left"/>
-		<h2 class="text-left ml-1 mb-3">Perfil Pessoa</h2>
+		<v-btn text="Voltar" @click="router.push(`/resources`)" class="mb-2 pa-1" density="comfortable" variant="text" prepend-icon="mdi-subdirectory-arrow-left"/>
+		<h2 class="text-left ml-1 mb-3">Perfil Recurso</h2>
 	</div>
 
 	<div class="profile-container">
 		<div class="left-container text-left">
-			<img src="@/images/profile-icon.svg" class="profile-icon"></img>
-			<p><strong>{{ tempPerson.name }}</strong> </p>
-			<p>@{{ tempPerson.id }}</p>
+			<img src="@/images/resource-icon.svg" class="profile-icon"></img>
+			<p><strong>{{ tempResource.name }}</strong> </p>
+			<p>Id Recurso: {{ tempResource.id }}</p>
 			<v-divider class="mb-5 mt-2"></v-divider>
-			<p class="pl-2 mb-1"><strong>Email:</strong> {{ tempPerson.email }}</p>
-			<p class="pl-2 mb-5"><strong>Função:</strong> {{ getItemValue(personRoles, tempPerson.role) }}</p>
+			<p class="pl-2 mb-1"><strong>Localização:</strong> {{ tempResource.location }}</p>
+			<p class="pl-2 mb-5"><strong>Tipo:</strong> {{ getItemValue(resourceTypes, tempResource.type) }}</p>
 
 			<v-divider class="mb-8 mt-2"></v-divider>
-			<CreatePersonDialog 
+			<CreateResourceDialog 
 				class="mb-1" 
-				:person="tempPerson" 
+				:resource="tempResource" 
 				:buttonText="true" 
-				@person-updated="getPersonData"
+				@resource-updated="getResourceData"
 			/>
 			<RemoveObjectDialog 
-				@remove-object="removePerson(tempPerson)"
+				@remove-object="removeResource(tempResource)"
 				:buttonText="true"
-				title="Remover Pessoa"
-				text="Tem a certeza que quer remover esta pessoa?"
-				icon="mdi-account"
+				title="Remover Recurso"
+				text="Tem a certeza que quer remover este recurso?"
+				icon="mdi-briefcase"
 			/>
 		</div>
 
 		<div class="right-container">
+			<div class="current-state-container">
+				<h2 class="text-left ml-2 mb-3">Estado Atual</h2>
+
+				<p>{{ tempResource.state }}</p>
+			</div>
+
 			<div class="reservations-container">
 				<h2 class="text-left ml-2 mb-3">{{ reservationsTitle }}</h2>
 
 				<v-data-table
 					:headers="headersReservations"
-					:items="validReservations"
+					:items="pendingReservations"
 					no-data-text="Sem reservas"
 					class="text-left w-auto"
 				>
-					<template v-slot:[`item.assignedResourceId`]="{ item }">
-						<button 
-							class="id-button" 
-							@click="router.push(`/resources/${item.assignedResourceId}`)"
-						>{{ item.assignedResourceId }}</button>
+					<template v-slot:[`item.type`]="{ item }">
+						<ReservationTypeChip :type="item.type"/>
 					</template>
 
 					<template v-slot:[`item.actions`]="{ item }">
@@ -56,10 +59,6 @@
 							cancelText="Não"
 						/>
 					</template>
-
-					<template v-slot:[`item.state`]="{ item }">
-						<ReservationStateChip :state="item.state"/>
-					</template>
 				</v-data-table>
 			</div>
 
@@ -71,11 +70,8 @@
 					no-data-text="Sem histórico de reservas"
 					class="text-left"
 				>
-					<template v-slot:[`item.assignedResourceId`]="{ item }">
-						<button 
-							class="id-button" 
-							@click="router.push(`/resources/${item.assignedResourceId}`)"
-						>{{ item.assignedResourceId }}</button>
+					<template v-slot:[`item.type`]="{ item }">
+						<ReservationTypeChip :type="item.type"/>
 					</template>
 
 					<template v-slot:[`item.state`]="{ item }">
@@ -83,9 +79,9 @@
 					</template>
 				</v-data-table>
 			</div>
+
 		</div>
 	</div>
-
 </template>
 
 
@@ -96,34 +92,37 @@ import { useRouter } from 'vue-router'
 
 import RemoteService from '@/services/RemoteService'
 
-import type PersonDto from '@/models/dtos'
+import type ResourceDto from '@/models/dtos'
 import type ReservationDto from '@/models/dtos'
 
-import { personRoles } from '@/models/person/PersonRoles'
+import { resourceTypes } from '@/models/resource/ResourceTypes'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
 
-import CreatePersonDialog from '@/views/persons/CreatePersonDialog.vue'
+import CreateResourceDialog from '@/views/resources/CreateResourceDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 import ReservationStateChip from '@/views/reservations/ReservationStateChip.vue'
+import ReservationTypeChip from '@/views/reservations/ReservationTypeChip.vue'
 
 const search = ref('')
 const router = useRouter()
 
 const props = defineProps({
-	personId: String
+	resourceId: String
 })
 
-const tempPerson = reactive<PersonDto>({
+const tempResource = reactive<ResourceDto>({
 	id: '',
 	name: '',
-	email: '',
-	role: '',
+	type: '',
+	state: '',
+	location: '',
 	reservations: [],
 })
 
 
-const validReservations = reactive<ReservationDto[]>([])
+const currentReservation = ref<ReservationDto>({})
+const pendingReservations = reactive<ReservationDto[]>([])
 const historicReservations = reactive<ReservationDto[]>([])
 
 const reservationsTitle = ref('')
@@ -131,63 +130,65 @@ const historicTitle = ref('')
 
 
 const headersReservations = [
-	{ title: 'Id Recurso', value: 'assignedResourceId', key: 'assignedResourceId' },
+	{ title: 'Tipo', value: 'type', key: 'type' },
 	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
 	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
-	{ title: 'Estado', value: 'state', key: 'state' },
 	{ title: 'Ações', value: 'actions', key: 'actions', sortable: false }
 ]
 
 const headersHistoric = [
-	{ title: 'Id Recurso', value: 'assignedResourceId', key: 'assignedResourceId' },
+	{ title: 'Tipo', value: 'type', key: 'type' },
 	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
 	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
 	{ title: 'Estado', value: 'state', key: 'state' }
 ]
 
 
-getPersonData()
+getResourceData()
 
-async function getPersonData() {
-	RemoteService.getPerson(props.personId).then(async (data) => {
-		tempPerson.id = data.id
-		tempPerson.name = data.name
-		tempPerson.email = data.email
-		tempPerson.role = data.role
+async function getResourceData() {
+	RemoteService.getResource(props.resourceId).then(async (data) => {
+		tempResource.id = data.id
+		tempResource.name = data.name
+		tempResource.type = data.type
+		tempResource.state = data.state
+		tempResource.location = data.location
 
-		tempPerson.reservations = data.reservations
+		tempResource.reservations = data.reservations
 		updateReservations()
 	}).catch((error) => {
-		console.error('Error getting person Data', error)
+		console.error('Error getting resource Data', error)
 	})
 }
 
 
-function removePerson(person) {
-	RemoteService.deletePerson(person).then(() => {
-		router.push(`/persons`)
+function removeResource(person) {
+	RemoteService.deleteResource(resource).then(() => {
+		router.push(`/resources`)
 	})
 }
 
 async function cancelReservation(reservation) {
 	RemoteService.cancelReservation(reservation).then(async (data) => {
-		getPersonData()
+		getResourceData()
 	})
 }
 
 function updateReservations() {
-	validReservations.splice(0, validReservations.length)
+	pendingReservations.splice(0, pendingReservations.length)
 	historicReservations.splice(0, historicReservations.length)
 
-	tempPerson.reservations.forEach((reservation: ReservationDto) => {
-		if (reservation.state == 'ACTIVE' || reservation.state == 'PENDING') {
-			validReservations.push(reservation)
+	tempResource.reservations.forEach((reservation: ReservationDto) => {
+		if (reservation.state == 'ACTIVE') {
+			currentReservation.value = reservation
+		} else if (reservation.state == 'PENDING') {
+			pendingReservations.push(reservation)
 		} else {
 			historicReservations.push(reservation)
 		}
 	})
 
-	reservationsTitle.value = `Reservas (${validReservations.length})`
+	reservationsTitle.value = `Reservas (${pendingReservations.length})`
 	historicTitle.value = `Histórico de Reservas (${historicReservations.length})`
 }
 
@@ -221,13 +222,15 @@ function updateReservations() {
 .profile-icon {
 	width: 80px;
 	height: 80px;
+	margin-bottom: 10px;
 }
 
-.reservations-container, .historic-container {
+.current-state-container, .reservations-container, .historic-container {
 	flex-grow: 1;
 	padding: 20px;
 	border-radius: 8px;
 	border: 1px solid #ddd;
+	overflow-x: auto;
 }
 
 </style>

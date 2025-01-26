@@ -49,3 +49,13 @@ body {
 }
 
 
+.id-button {
+	text-decoration: underline;
+	color: #2196F3;
+	transition: color 0.2s ease;
+}
+
+.id-button:hover {
+	color: #215cf3;
+}
+
