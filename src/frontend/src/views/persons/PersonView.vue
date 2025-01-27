@@ -47,6 +47,7 @@
 					text="Tem a certeza que quer remover esta pessoa?"
 					icon="mdi-account"
 				/>
+				<AssignReservationDialog @reservation-assigned="getPersons" :person="item" mode="reservation"/>
 			</div>
 		</template>
 	</v-data-table>
@@ -66,6 +67,7 @@ import { personRoles } from '@/models/person/PersonRoles'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
 
 import CreatePersonDialog from '@/views/persons/CreatePersonDialog.vue'
+import AssignReservationDialog from '@/views/reservations/AssignReservationDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 
 

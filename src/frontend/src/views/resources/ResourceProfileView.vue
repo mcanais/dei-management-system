@@ -1,6 +1,12 @@
 <template>
 	<div class="d-flex flex-column align-start">
-		<v-btn text="Voltar" @click="router.push(`/resources`)" class="mb-2 pa-1" density="comfortable" variant="text" prepend-icon="mdi-subdirectory-arrow-left"/>
+		<v-btn text="Voltar" 
+			@click="router.push(`/resources`)" 
+			class="mb-2 pa-1" 
+			density="comfortable" 
+			variant="text" 
+			prepend-icon="mdi-subdirectory-arrow-left"
+		/>
 		<h2 class="text-left ml-1 mb-3">Perfil Recurso</h2>
 	</div>
 
@@ -30,23 +36,68 @@
 		</div>
 
 		<div class="right-container">
+
 			<div class="current-state-container">
 				<h2 class="text-left ml-2 mb-3">Estado Atual</h2>
 
-				<p>{{ tempResource.state }}</p>
+				<div class="border-sm rounded-lg pa-3 d-flex flex-column align-start overflow-auto">
+					<div class="d-flex">
+						<ResourceStateChip class="mr-2" :state="tempResource.state"/>
+						<RemoveObjectDialog 
+							v-if="tempResource.state != 'AVAILABLE'"
+							@remove-object="cancelReservation(currentReservation)"
+							title="Cancelar Reserva"
+							text="Tem a certeza que quer cancelar esta reserva?"
+							icon="mdi-calendar"
+							submitText="Sim"
+							cancelText="Não"
+						/>
+					</div>
+
+					<div v-if="tempResource.state == 'AVAILABLE'">
+						<p class="mt-3 ml-1 text-left">Recurso atualmente disponível.</p>
+						<p v-if="validReservations.length != 0" class="mt-1 ml-1 text-left">Próxima reserva:</p>
+						<p v-else class="mt-1 ml-1 text-left">Sem reservas futuras.</p>
+					</div>
+
+					<div v-else-if="tempResource.state == 'INUSE'">
+						<div class="d-flex mt-3 ml-1 text-left ga-1">
+							<p> Recurso atualmente em uso por:</p>
+							<button 
+								class="id-button" 
+								@click="router.push(`/persons/${currentReservation.assignedPersonId}`)"
+							>{{ currentReservation.assignedPersonId }}</button>
+						</div>
+						<p class="mt-2 ml-1 text-left">Duração: {{ currentReservation.startDate }} - {{ currentReservation.finishDate }}</p>
+					</div>
+
+					<div v-else-if="tempResource.state == 'MAINTENANCE'">
+						<p class="mt-3 ml-1 text-left">Recurso atualmente em manutenção.</p>
+						<p class="mt-2 ml-1 text-left">Duração: {{ currentReservation.startDate }} - {{ currentReservation.finishDate }}</p>
+					</div>
+				</div>
 			</div>
 
 			<div class="reservations-container">
-				<h2 class="text-left ml-2 mb-3">{{ reservationsTitle }}</h2>
+				<div class="d-flex">
+					<h2 class="text-left ml-2 mb-3">{{ reservationsTitle }}</h2>
+					<v-spacer/>
+					<AssignReservationDialog @reservation-assigned="getResourceData" :resource="tempResource" mode="reservation"/>
+					<AssignReservationDialog @reservation-assigned="getResourceData" :resource="tempResource" mode="maintenance"/>
+				</div>
 
 				<v-data-table
 					:headers="headersReservations"
-					:items="pendingReservations"
+					:items="validReservations"
 					no-data-text="Sem reservas"
 					class="text-left w-auto"
 				>
 					<template v-slot:[`item.type`]="{ item }">
 						<ReservationTypeChip :type="item.type"/>
+					</template>
+
+					<template v-slot:[`item.state`]="{ item }">
+						<ReservationStateChip :state="item.state"/>
 					</template>
 
 					<template v-slot:[`item.actions`]="{ item }">
@@ -79,7 +130,6 @@
 					</template>
 				</v-data-table>
 			</div>
-
 		</div>
 	</div>
 </template>
@@ -97,12 +147,15 @@ import type ReservationDto from '@/models/dtos'
 
 import { resourceTypes } from '@/models/resource/ResourceTypes'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
-import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
+import { getDateFromString, getStringFromDate, getRelativeDate, sortByDate } from '@/lib/dateUtils'
 
 import CreateResourceDialog from '@/views/resources/CreateResourceDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
-import ReservationStateChip from '@/views/reservations/ReservationStateChip.vue'
-import ReservationTypeChip from '@/views/reservations/ReservationTypeChip.vue'
+import AssignReservationDialog from '@/views/reservations/AssignReservationDialog.vue'
+
+import ReservationStateChip from '@/components/chips/ReservationStateChip.vue'
+import ResourceStateChip from '@/components/chips/ResourceStateChip.vue'
+import ReservationTypeChip from '@/components/chips/ReservationTypeChip.vue'
 
 const search = ref('')
 const router = useRouter()
@@ -122,7 +175,7 @@ const tempResource = reactive<ResourceDto>({
 
 
 const currentReservation = ref<ReservationDto>({})
-const pendingReservations = reactive<ReservationDto[]>([])
+const validReservations = reactive<ReservationDto[]>([])
 const historicReservations = reactive<ReservationDto[]>([])
 
 const reservationsTitle = ref('')
@@ -131,15 +184,16 @@ const historicTitle = ref('')
 
 const headersReservations = [
 	{ title: 'Tipo', value: 'type', key: 'type' },
-	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
-	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
+	{ title: 'Data Inicial', value: 'startDate', key: 'startDate', sort: sortByDate },
+	{ title: 'Data Final', value: 'finishDate', key: 'finishDate', sort: sortByDate },
+	{ title: 'Estado', value: 'state', key: 'state' },
 	{ title: 'Ações', value: 'actions', key: 'actions', sortable: false }
 ]
 
 const headersHistoric = [
 	{ title: 'Tipo', value: 'type', key: 'type' },
-	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
-	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
+	{ title: 'Data Inicial', value: 'startDate', key: 'startDate', sort: sortByDate },
+	{ title: 'Data Final', value: 'finishDate', key: 'finishDate', sort: sortByDate },
 	{ title: 'Estado', value: 'state', key: 'state' }
 ]
 
@@ -162,7 +216,7 @@ async function getResourceData() {
 }
 
 
-function removeResource(person) {
+function removeResource(resource) {
 	RemoteService.deleteResource(resource).then(() => {
 		router.push(`/resources`)
 	})
@@ -175,20 +229,21 @@ async function cancelReservation(reservation) {
 }
 
 function updateReservations() {
-	pendingReservations.splice(0, pendingReservations.length)
+	validReservations.splice(0, validReservations.length)
 	historicReservations.splice(0, historicReservations.length)
 
 	tempResource.reservations.forEach((reservation: ReservationDto) => {
 		if (reservation.state == 'ACTIVE') {
 			currentReservation.value = reservation
+			validReservations.push(reservation)
 		} else if (reservation.state == 'PENDING') {
-			pendingReservations.push(reservation)
+			validReservations.push(reservation)
 		} else {
 			historicReservations.push(reservation)
 		}
 	})
 
-	reservationsTitle.value = `Reservas (${pendingReservations.length})`
+	reservationsTitle.value = `Reservas (${validReservations.length})`
 	historicTitle.value = `Histórico de Reservas (${historicReservations.length})`
 }
 

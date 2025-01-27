@@ -30,6 +30,7 @@ export class ReservationDto {
 	type?: string
 	state?: string
     assignedResourceId?: string
+    assignedPersonId?: string
   
 	constructor(jsonObj: Partial<ReservationDto>) {
 		Object.assign(this, jsonObj)

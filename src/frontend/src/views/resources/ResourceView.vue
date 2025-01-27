@@ -39,7 +39,7 @@
 		</template>
 
 		<template v-slot:[`item.state`]="{ item }">
-			<span>{{ getItemValue(resourceStates, item.state) }}</span>
+			<ResourceStateChip :state="item.state"/>
 		</template>
 
 		<template v-slot:[`item.actions`]="{ item }">
@@ -50,8 +50,8 @@
 					text="Tem a certeza que quer remover este recurso?"
 					icon="mdi-briefcase"
 				/>
-				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="false"/>
-				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" :maintenance="true"/>
+				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" mode="reservation"/>
+				<AssignReservationDialog @reservation-assigned="getResources" :resource="item" mode="maintenance"/>
 			</div>
 		</template>
 	</v-data-table>
@@ -71,6 +71,7 @@ import type ResourceDto from '@/models/dtos'
 import CreateResourceDialog from '@/views/resources/CreateResourceDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
 import AssignReservationDialog from '@/views/reservations/AssignReservationDialog.vue'
+import ResourceStateChip from '@/components/chips/ResourceStateChip.vue'
 
 import { resourceTypes } from '@/models/resource/ResourceTypes'
 import { resourceStates } from '@/models/resource/ResourceStates'

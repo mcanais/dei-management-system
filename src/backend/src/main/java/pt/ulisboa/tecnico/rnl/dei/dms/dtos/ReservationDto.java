@@ -24,4 +24,6 @@ public class ReservationDto {
 	private ReservationState state;
 
 	private Long assignedResourceId;
+
+	private String assignedPersonId;
 }

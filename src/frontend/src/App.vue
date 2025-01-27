@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/topbar/TopBar.vue'
 
 import { RouterLink, RouterView } from 'vue-router'
 </script>

@@ -33,6 +33,8 @@ public class Reservation {
 
 	private Long assignedResourceId;
 
+	private String assignedPersonId;
+
 	@ManyToOne
 	@JoinColumn(name = "person_id", nullable = true)
 	private Person person;
@@ -56,7 +58,7 @@ public class Reservation {
 
 		if (!currentDate.isBefore(startDate) && !currentDate.isAfter(finishDate)) {
 			this.state = ReservationState.ACTIVE;
-		} else if (this.state == ReservationState.ACTIVE) {
+		} else if (currentDate.isAfter(finishDate)) {
 			this.state = ReservationState.FINISHED;
 		} else {
 			this.state = ReservationState.PENDING;

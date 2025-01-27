@@ -46,6 +46,10 @@
 						>{{ item.assignedResourceId }}</button>
 					</template>
 
+					<template v-slot:[`item.state`]="{ item }">
+						<ReservationStateChip :state="item.state"/>
+					</template>
+
 					<template v-slot:[`item.actions`]="{ item }">
 						<RemoveObjectDialog 
 							@remove-object="cancelReservation(item)"
@@ -55,10 +59,6 @@
 							submitText="Sim"
 							cancelText="Não"
 						/>
-					</template>
-
-					<template v-slot:[`item.state`]="{ item }">
-						<ReservationStateChip :state="item.state"/>
 					</template>
 				</v-data-table>
 			</div>
@@ -101,11 +101,11 @@ import type ReservationDto from '@/models/dtos'
 
 import { personRoles } from '@/models/person/PersonRoles'
 import { getItemValue, fuzzySearch } from '@/lib/utils'
-import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dateUtils'
+import { getDateFromString, getStringFromDate, getRelativeDate, sortByDate } from '@/lib/dateUtils'
 
 import CreatePersonDialog from '@/views/persons/CreatePersonDialog.vue'
 import RemoveObjectDialog from '@/components/RemoveObjectDialog.vue'
-import ReservationStateChip from '@/views/reservations/ReservationStateChip.vue'
+import ReservationStateChip from '@/components/chips/ReservationStateChip.vue'
 
 const search = ref('')
 const router = useRouter()
@@ -132,16 +132,16 @@ const historicTitle = ref('')
 
 const headersReservations = [
 	{ title: 'Id Recurso', value: 'assignedResourceId', key: 'assignedResourceId' },
-	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
-	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
+	{ title: 'Data Inicial', value: 'startDate', key: 'startDate', sort: sortByDate },
+	{ title: 'Data Final', value: 'finishDate', key: 'finishDate', sort: sortByDate },
 	{ title: 'Estado', value: 'state', key: 'state' },
 	{ title: 'Ações', value: 'actions', key: 'actions', sortable: false }
 ]
 
 const headersHistoric = [
 	{ title: 'Id Recurso', value: 'assignedResourceId', key: 'assignedResourceId' },
-	{ title: 'Data Inicial', value: 'startDate', key: 'startDate' },
-	{ title: 'Data Final', value: 'finishDate', key: 'finishDate' },
+	{ title: 'Data Inicial', value: 'startDate', key: 'startDate', sort: sortByDate },
+	{ title: 'Data Final', value: 'finishDate', key: 'finishDate', sort: sortByDate },
 	{ title: 'Estado', value: 'state', key: 'state' }
 ]
 

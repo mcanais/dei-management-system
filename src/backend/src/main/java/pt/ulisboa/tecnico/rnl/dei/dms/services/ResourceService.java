@@ -66,6 +66,15 @@ public class ResourceService {
         return resourceMapper.resourceToDto(resource);
     }
 
+	public void updateResourcesStates(List<Long> resourceIdsList) {
+		for (Long resourceId : resourceIdsList) {
+        	Resource resource = resourceRepository.findById(resourceId).get();
+			resource.updateState();
+			
+			resourceRepository.save(resource);
+		}
+	}
+
 	//public ResourceDto toMaintenance(ResourceDto resourceDto) {
 	//       Resource resource = resourceRepository.findById(resourceDto.getId()).get();
 	//

@@ -2,13 +2,12 @@
 	<v-dialog v-model="dialog" max-width="400">
 		<template v-slot:activator="{ props: activatorProps }">
 			<v-btn
-				v-if="!props.maintenance"
 				v-bind="activatorProps"
 				class="mr-2 pa-1"
 				density="comfortable"
 				variant="outlined"
 				size="small"
-				icon="mdi-account-plus"
+				:icon="icon"
 				@click="initialize"
 			>
 				<v-icon/>
@@ -16,26 +15,7 @@
 					activator="parent"
 					location="bottom"
 					offset="5"
-					text="Reserva"
-				/>
-			</v-btn>
-
-			<v-btn
-				v-else
-				v-bind="activatorProps"
-				class="mr-2 pa-1"
-				density="comfortable"
-				variant="outlined"
-				size="small"
-				icon="mdi-cog"
-				@click="initialize"
-			>
-				<v-icon/>
-				<v-tooltip
-					activator="parent"
-					location="bottom"
-					offset="5"
-					text="Manutenção"
+					:text="title"
 				/>
 			</v-btn>
 		</template>
@@ -44,11 +24,22 @@
 			<v-card-text>
 				<!-- Persons list !-->
 				<v-autocomplete
-					v-if="!props.maintenance"
+					v-if="props.mode == 'reservation' && props.resource != null"
 					label="IST ID da Pessoa"
 					v-model="istIdSelected"
 					:items="personIds"
-					:rules="istIdRules"
+					:rules="idRules"
+					@update:model-value="updateTextFields"
+					required
+					class="mb-2"
+				></v-autocomplete>
+
+				<v-autocomplete
+					v-else-if="props.mode == 'reservation' && props.person != null"
+					label="Resource ID"
+					v-model="resourceIdSelected"
+					:items="resourceIds"
+					:rules="idRules"
 					@update:model-value="updateTextFields"
 					required
 					class="mb-2"
@@ -129,23 +120,29 @@ import { getDateFromString, getStringFromDate, getRelativeDate } from '@/lib/dat
 const dialog = ref(false)
 const valid = ref(false)
 
-
 const title = ref('')
 const label = ref('')
+const icon = ref('')
 
 const emit = defineEmits(['reservation-assigned'])
 
 const props = defineProps({
-	maintenance: {
-		type: Boolean,
-		default: false,
+	mode: {
+		type: String,
+		default: 'reservation',
 	},
-	resource: Object,
-	person: Object
+	resource: {
+		type: Object,
+		default: null
+	},
+	person: {
+		type: Object,
+		default: null
+	}
 })
 
 const istIdSelected = ref('')
-const resouceIdSelected = ref('')
+const resourceIdSelected = ref('')
 
 const dateInterval = ref([])
 const validReservation = ref(false)
@@ -158,26 +155,35 @@ const newReservation = reactive<ReservationDto>({
 const personIds = reactive([])
 const resourceIds = reactive([])
 
+initialize()
 
 function initialize() {
 	dateInterval.value.splice(0,dateInterval.value.length)
 	updateTextFields()
 	
-	if (props.maintenance) {
+	if (props.mode == 'maintenance') {
 		title.value = 'Manutenção'
 		label.value = 'Defina a duração da manutenção no calendário:'
+		icon.value = 'mdi-cog'
 	} else { 
 		title.value = 'Reserva'
 		label.value = 'Defina a duração da reserva no calendário:'
 
 		istIdSelected.value = ''
-		getPersonIds()
+		resourceIdSelected.value = ''
+
+		if (props.resource != null) {
+			icon.value = 'mdi-account-plus'
+			getPersonIds()
+		} else {
+			icon.value = 'mdi-briefcase-plus'
+			getResourceIds()
+		}
 	}
 }
 
 function updateTextFields() {
-	if (dateInterval.value.length == 0) { 
-		// No date selected
+	if (dateInterval.value.length == 0) {
 		newReservation.startDate = ''
 		newReservation.finishDate = ''
 		valid.value = false
@@ -190,11 +196,11 @@ function updateTextFields() {
 
 	validReservation.value = !intervalOverlapsReservations(newReservation)
 
-	valid.value = (props.maintenance == true || (istIdSelected.value != '' && istIdSelected.value != null)) && validReservation.value == true
+	valid.value = (props.mode == 'maintenance' || (istIdSelected.value != '' && istIdSelected.value != null)) && validReservation.value == true
 }
 
 const assignReservation = async () => {
-	if (props.maintenance) {
+	if (props.mode == 'maintenance') {
 		await RemoteService.assignMaintenance(newReservation, props.resource.id)
 	} else {
 		await RemoteService.assignReservation(newReservation, istIdSelected.value, props.resource.id)
@@ -213,16 +219,30 @@ async function getPersonIds() {
 	})
 }
 
+async function getResourceIds() {
+	resourceIds.splice(0, resourceIds.length)
+	RemoteService.getResources().then(async (data) => {
+		data.forEach((resource: ResourceDto) => {
+			resourceIds.push(resource.id)
+		})
+	})
+}
 
 // True if the date doesnt overlap with the reservations
 function doesntOverlapReservations(date: Date): boolean {
-	for (const reservation of props.resource.reservations) {
+	if (props.resource == null) {
+		return false
+	}
+	const reservationsList = props.resource.reservations
+
+
+	for (const reservation of reservationsList) {
 		if (reservation.state == 'FINISHED' || reservation.state == 'CANCELLED') {
 			continue
 		}
 
-		var reservationStartDate = getDateFromString(reservation.startDate)
-		var reservationFinishDate = getDateFromString(reservation.finishDate)
+		const reservationStartDate = getDateFromString(reservation.startDate)
+		const reservationFinishDate = getDateFromString(reservation.finishDate)
 
 		if (date >= reservationStartDate && date <= reservationFinishDate) {
 			return false
@@ -240,11 +260,11 @@ function intervalOverlapsReservations(interval): boolean {
 			continue
 		}
 
-		var intervalStartDate = getDateFromString(interval.startDate)
-		var intervalFinishDate = getDateFromString(interval.finishDate)
+		const intervalStartDate = getDateFromString(interval.startDate)
+		const intervalFinishDate = getDateFromString(interval.finishDate)
 
-		var reservationStartDate = getDateFromString(reservation.startDate)
-		var reservationFinishDate = getDateFromString(reservation.finishDate)
+		const reservationStartDate = getDateFromString(reservation.startDate)
+		const reservationFinishDate = getDateFromString(reservation.finishDate)
 
 		if (intervalStartDate <= reservationFinishDate 
 			&& intervalFinishDate >= reservationStartDate) {
@@ -255,8 +275,8 @@ function intervalOverlapsReservations(interval): boolean {
 	return false
 }
 
-const istIdRules = [
-	(v: string) => !!v || 'Insira o IST ID',
+const idRules = [
+	(v: string) => !!v || 'Insira o ID',
 ]
 
 </script>

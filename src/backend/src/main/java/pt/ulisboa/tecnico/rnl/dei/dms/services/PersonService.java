@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.services;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.models.person.Person;
 import pt.ulisboa.tecnico.rnl.dei.dms.models.resource.Resource;
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.Reservation;
 import pt.ulisboa.tecnico.rnl.dei.dms.dtos.PersonDto;
 import pt.ulisboa.tecnico.rnl.dei.dms.repository.PersonRepository;
 import pt.ulisboa.tecnico.rnl.dei.dms.mappers.PersonMapper;
@@ -18,11 +20,13 @@ public class PersonService {
 
 	private final PersonRepository personRepository;
 	private final PersonMapper personMapper;
+	private final ResourceService resourceService;
 
 	@Autowired
-	public PersonService(PersonRepository personRepository, PersonMapper personMapper) {
+	public PersonService(PersonRepository personRepository, PersonMapper personMapper, ResourceService resourceService) {
 		this.personRepository = personRepository;
 		this.personMapper = personMapper;
+		this.resourceService = resourceService;
 	}
     
     public PersonDto createPerson(PersonDto personDto) {
@@ -55,25 +59,16 @@ public class PersonService {
     }
 
     public void deletePerson(String id) {
-        //Person person = personRepository.findById(id).get();
+        Person person = personRepository.findById(id).get();
 		
-		//for (Resource resource : person.getResources()) {
-		//	resource.setPerson(null);
-		//}
-		//
-		//person.clearResources();
+		List<Long> resourceIdsList = new ArrayList<>();
 
-        personRepository.deleteById(id);
+		for (Reservation reservation : person.getReservations()) {
+			resourceIdsList.add(reservation.getAssignedResourceId());
+		}
+
+		personRepository.deleteById(id);
+
+		resourceService.updateResourcesStates(resourceIdsList);
     }
-
-	//
-	//public PersonDto removeResourceFromPerson(String personId, Long resourceId) {
-	//    Person person = personRepository.findById(personId).get();
-	//	Resource resource = resourceRepository.findById(resourceId).get();
-	//
-	//	person.removeResource(resource);
-	//
-	//	personRepository.save(person);
-	//       return personMapper.personToDto(person);
-	//}
 }

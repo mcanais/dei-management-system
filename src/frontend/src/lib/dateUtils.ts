@@ -33,3 +33,21 @@ export function getRelativeDate(n: number): Date {
 	return todayDate
 }
 
+
+// Custom sort for dates
+// Returns:
+//    1 if date A comes after date B
+//   -1 if date B comes after date A
+//    0 if date A is the same as date B
+export function sortByDate(a: string, b: string): number {
+	const dateA = getDateFromString(a)
+	const dateB = getDateFromString(b)
+
+	if (dateA > dateB) {
+		return 1
+	} else if (dateB > dateA) {
+		return -1
+	} else {
+		return 0
+	}
+}

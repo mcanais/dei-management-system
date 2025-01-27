@@ -73,7 +73,8 @@ public class ReservationService {
 		person.addReservation(reservation);
 		resource.addReservation(reservation);
 
-		reservation.setAssignedResourceId(resource.getId());
+		reservation.setAssignedResourceId(resourceId);
+		reservation.setAssignedPersonId(personId);
 		reservation.setType(ReservationType.PERSON);
 		reservation.updateState();
 		resource.updateState();

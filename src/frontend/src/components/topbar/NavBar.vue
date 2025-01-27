@@ -56,6 +56,8 @@ const navbarItems = [
 	background-color: rgba(245,245,245 ,0.5);
 }
 
+/* FIXME: Make the text on the navigation button disappear
+          when the size of the screen is too small*/
 @media (max-width: 620px) {
 	.nav-button {
 	}

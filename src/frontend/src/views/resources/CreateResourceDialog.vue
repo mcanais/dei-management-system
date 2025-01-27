@@ -31,7 +31,7 @@
 						activator="parent"
 						location="bottom"
 						offset="5"
-						text="Editar Pessoa"
+						text="Editar Recurso"
 					/>
 				</v-btn>
 

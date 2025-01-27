@@ -15,6 +15,3 @@ export function fuzzySearch(value: string, search: string) {
 	let searchRegex = new RegExp(search.split('').join('.*'), 'i')
 	return searchRegex.test(value)
 }
-
-
-

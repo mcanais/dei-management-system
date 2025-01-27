@@ -45,6 +45,7 @@ public class Resource {
 
 	public void updateState() {
 		if (reservations == null || reservations.isEmpty()) {
+			this.state = ResourceState.AVAILABLE;
 			return;
 		}
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
