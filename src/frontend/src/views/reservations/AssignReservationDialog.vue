@@ -36,7 +36,7 @@
 
 				<v-autocomplete
 					v-else-if="props.mode == 'reservation' && props.person != null"
-					label="Resource ID"
+					label="ID Recurso"
 					v-model="resourceIdSelected"
 					:items="resourceIds"
 					:rules="idRules"
@@ -234,7 +234,6 @@ function doesntOverlapReservations(date: Date): boolean {
 		return false
 	}
 	const reservationsList = props.resource.reservations
-
 
 	for (const reservation of reservationsList) {
 		if (reservation.state == 'FINISHED' || reservation.state == 'CANCELLED') {

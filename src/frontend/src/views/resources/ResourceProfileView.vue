@@ -41,8 +41,8 @@
 				<h2 class="text-left ml-2 mb-3">Estado Atual</h2>
 
 				<div class="border-sm rounded-lg pa-3 d-flex flex-column align-start overflow-auto">
-					<div class="d-flex">
-						<ResourceStateChip class="mr-2" :state="tempResource.state"/>
+					<div class="d-flex align-center ga-2">
+						<ResourceStateChip :state="tempResource.state"/>
 						<RemoveObjectDialog 
 							v-if="tempResource.state != 'AVAILABLE'"
 							@remove-object="cancelReservation(currentReservation)"
@@ -56,7 +56,11 @@
 
 					<div v-if="tempResource.state == 'AVAILABLE'">
 						<p class="mt-3 ml-1 text-left">Recurso atualmente disponível.</p>
-						<p v-if="validReservations.length != 0" class="mt-1 ml-1 text-left">Próxima reserva:</p>
+
+						<p v-if="validReservations.length != 0" 
+							class="mt-1 ml-1 text-left"
+							>Próxima reserva: {{ nextReservation.startDate }} - {{ nextReservation.finishDate }}</p>
+
 						<p v-else class="mt-1 ml-1 text-left">Sem reservas futuras.</p>
 					</div>
 
@@ -79,8 +83,8 @@
 			</div>
 
 			<div class="reservations-container">
-				<div class="d-flex">
-					<h2 class="text-left ml-2 mb-3">{{ reservationsTitle }}</h2>
+				<div class="d-flex align-center mb-3">
+					<h2 class="text-left ml-2">{{ reservationsTitle }}</h2>
 					<v-spacer/>
 					<AssignReservationDialog @reservation-assigned="getResourceData" :resource="tempResource" mode="reservation"/>
 					<AssignReservationDialog @reservation-assigned="getResourceData" :resource="tempResource" mode="maintenance"/>
@@ -93,7 +97,7 @@
 					class="text-left w-auto"
 				>
 					<template v-slot:[`item.type`]="{ item }">
-						<ReservationTypeChip :type="item.type"/>
+						<ReservationTypeChip :type="item.type" :assignedPersonId="item.assignedPersonId"/>
 					</template>
 
 					<template v-slot:[`item.state`]="{ item }">
@@ -175,6 +179,8 @@ const tempResource = reactive<ResourceDto>({
 
 
 const currentReservation = ref<ReservationDto>({})
+const nextReservation = ref<ReservationDto>({})
+
 const validReservations = reactive<ReservationDto[]>([])
 const historicReservations = reactive<ReservationDto[]>([])
 
@@ -231,13 +237,19 @@ async function cancelReservation(reservation) {
 function updateReservations() {
 	validReservations.splice(0, validReservations.length)
 	historicReservations.splice(0, historicReservations.length)
+	nextReservation.value = {}
 
 	tempResource.reservations.forEach((reservation: ReservationDto) => {
+
 		if (reservation.state == 'ACTIVE') {
 			currentReservation.value = reservation
 			validReservations.push(reservation)
 		} else if (reservation.state == 'PENDING') {
 			validReservations.push(reservation)
+
+			if (!nextReservation.value.startDate || getDateFromString(reservation.startDate) < getDateFromString(nextReservation.value.startDate)) {
+				nextReservation.value = reservation
+			}
 		} else {
 			historicReservations.push(reservation)
 		}

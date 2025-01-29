@@ -47,7 +47,6 @@
 					text="Tem a certeza que quer remover esta pessoa?"
 					icon="mdi-account"
 				/>
-				<AssignReservationDialog @reservation-assigned="getPersons" :person="item" mode="reservation"/>
 			</div>
 		</template>
 	</v-data-table>
