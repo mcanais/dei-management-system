@@ -69,6 +69,6 @@ public class PersonService {
 
 		personRepository.deleteById(id);
 
-		resourceService.updateResourcesStates(resourceIdsList);
+		resourceService.updateResourceListState(resourceIdsList);
     }
 }

@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.rnl.dei.dms.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,18 +28,21 @@ public class ReservationService {
 	private final PersonRepository personRepository;
 	private final ResourceRepository resourceRepository;
 	private final ReservationMapper reservationMapper;
+	private final ResourceService resourceService;
 
 	@Autowired
 	public ReservationService(
 			ReservationRepository reservationRepository, 
 			PersonRepository personRepository, 
 			ResourceRepository resourceRepository, 
-			ReservationMapper reservationMapper
+			ReservationMapper reservationMapper,
+			ResourceService resourceService
 		) {
 		this.reservationRepository = reservationRepository;
 		this.personRepository = personRepository;
 		this.resourceRepository = resourceRepository;
 		this.reservationMapper = reservationMapper;
+		this.resourceService = resourceService;
 	}
     
     public ReservationDto createReservation(ReservationDto reservationDto) {
@@ -70,14 +75,19 @@ public class ReservationService {
 
 		Reservation reservation = reservationMapper.dtoToReservation(reservationDto);
 
+		if (this.reservationsOverlap(resource.getReservations(), reservation) || 
+				this.reservationsOverlap(person.getReservations(), reservation)) {
+            throw new RuntimeException("Reservations Overlap");
+		}
 		person.addReservation(reservation);
 		resource.addReservation(reservation);
 
 		reservation.setAssignedResourceId(resourceId);
 		reservation.setAssignedPersonId(personId);
 		reservation.setType(ReservationType.PERSON);
-		reservation.updateState();
-		resource.updateState();
+
+		this.updateReservationState(reservation);
+		resourceService.updateResourceState(resource);
 		
 		reservationRepository.save(reservation);
         return reservationMapper.reservationToDto(reservation);
@@ -87,12 +97,16 @@ public class ReservationService {
 		Reservation reservation = reservationMapper.dtoToReservation(reservationDto);
 		Resource resource = resourceRepository.findById(resourceId).get();
 
+		if (this.reservationsOverlap(resource.getReservations(), reservation)) {
+            throw new RuntimeException("Reservations Overlap");
+		}
 		resource.addReservation(reservation);
 
 		reservation.setAssignedResourceId(resource.getId());
 		reservation.setType(ReservationType.MAINTENANCE);
-		reservation.updateState();
-		resource.updateState();
+
+		this.updateReservationState(reservation);
+		resourceService.updateResourceState(resource);
 
 		reservationRepository.save(reservation);
 		return reservationMapper.reservationToDto(reservation);
@@ -103,13 +117,66 @@ public class ReservationService {
 		Resource resource = resourceRepository.findById(reservation.getAssignedResourceId()).get();
 
 		reservation.setState(ReservationState.CANCELLED);
-		resource.updateState();
+		resourceService.updateResourceState(resource);
 
 		reservationRepository.save(reservation);
 		return reservationMapper.reservationToDto(reservation);
 	}
 
+
     public void deleteReservation(Long reservationId) {
         reservationRepository.deleteById(reservationId);
     }
+
+
+	private boolean reservationsOverlap(List<Reservation> reservations, Reservation newReservation) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+		List<Reservation> validReservations = reservations.stream()
+			.filter(reservation -> (reservation.getState() == ReservationState.ACTIVE || reservation.getState() == ReservationState.PENDING))
+			.collect(Collectors.toList());
+
+		validReservations.add(newReservation);
+
+		validReservations.sort((reservation1, reservation2) -> {
+            LocalDate date1 = LocalDate.parse(reservation1.getStartDate(), formatter);
+            LocalDate date2 = LocalDate.parse(reservation2.getStartDate(), formatter);
+
+            return date1.compareTo(date2);
+        });
+
+		for (int i = 1; i < validReservations.size(); i++) {
+			LocalDate startDate = LocalDate.parse(validReservations.get(i).getStartDate(), formatter); 
+			LocalDate finishDate = LocalDate.parse(validReservations.get(i-1).getFinishDate(), formatter); 
+
+			if (!startDate.isAfter(finishDate)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public void updateReservationState(Reservation reservation) {
+		if (reservation.getState() == ReservationState.FINISHED || reservation.getState() == ReservationState.CANCELLED) {
+			// Terminal state
+			return;
+		}
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+		LocalDate startDate = LocalDate.parse(reservation.getStartDate(), formatter); 
+		LocalDate finishDate = LocalDate.parse(reservation.getFinishDate(), formatter); 
+		LocalDate currentDate = LocalDate.now();
+
+		if (!currentDate.isBefore(startDate) && !currentDate.isAfter(finishDate)) {
+			reservation.setState(ReservationState.ACTIVE);
+		} 
+		else if (currentDate.isAfter(finishDate)) {
+			reservation.setState(ReservationState.FINISHED);
+		}
+		else {
+			reservation.setState(ReservationState.PENDING);
+		}
+	}
 }

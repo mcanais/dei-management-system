@@ -1,9 +1,10 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.controllers;
 
+import java.util.List;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.services.ReservationService;
 import pt.ulisboa.tecnico.rnl.dei.dms.dtos.ReservationDto;
@@ -20,22 +21,17 @@ public class ReservationController {
 	}
 
 	@PostMapping("/create")
-	public ReservationDto createReservation(@RequestBody ReservationDto reservationDto) {
+	public ReservationDto createReservation(@RequestBody @Valid ReservationDto reservationDto) {
 		return reservationService.createReservation(reservationDto);
 	}
 
-	@PutMapping("/update")
-	public ReservationDto updateReservation(@RequestBody ReservationDto reservationDto) {
-		return reservationService.updateReservation(reservationDto);
-	}
-
 	@PutMapping("/assign/{personId}/{resourceId}")
-	public ReservationDto assignReservation(@RequestBody ReservationDto reservationDto, @PathVariable String personId, @PathVariable Long resourceId) {
+	public ReservationDto assignReservation(@RequestBody @Valid ReservationDto reservationDto, @PathVariable String personId, @PathVariable Long resourceId) {
 		return reservationService.assignReservation(reservationDto, personId, resourceId);
 	}
 
 	@PutMapping("/maintenance/{resourceId}")
-	public ReservationDto assignReservation(@RequestBody ReservationDto reservationDto, @PathVariable Long resourceId) {
+	public ReservationDto assignReservation(@RequestBody @Valid ReservationDto reservationDto, @PathVariable Long resourceId) {
 		return reservationService.assignMaintenance(reservationDto, resourceId);
 	}
 

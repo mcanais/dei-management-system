@@ -1,9 +1,10 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.controllers;
 
+import java.util.List;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.services.ResourceService;
 import pt.ulisboa.tecnico.rnl.dei.dms.dtos.ResourceDto;
@@ -25,24 +26,14 @@ public class ResourceController {
 	}
 
 	@PostMapping("/create")
-	public ResourceDto createResource(@RequestBody ResourceDto resourceDto) {
+	public ResourceDto createResource(@RequestBody @Valid ResourceDto resourceDto) {
 		return resourceService.createResource(resourceDto);
 	}
 
 	@PutMapping("/update")
-	public ResourceDto updateResource(@RequestBody ResourceDto resourceDto) {
+	public ResourceDto updateResource(@RequestBody @Valid ResourceDto resourceDto) {
 		return resourceService.updateResource(resourceDto);
 	}
-
-	//@PutMapping("/maintenance")
-	//public ResourceDto resourceToMaintenance(@RequestBody ResourceDto resourceDto) {
-	//	return resourceService.toMaintenance(resourceDto);
-	//}
-	//
-	//@PutMapping("/available")
-	//public ResourceDto resourceAvailable(@RequestBody ResourceDto resourceDto) {
-	//	return resourceService.setAvailable(resourceDto);
-	//}
 
 	@DeleteMapping("/delete/{resourceId}")
 	public void deleteResource(@PathVariable Long resourceId) {

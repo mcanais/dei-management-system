@@ -1,9 +1,10 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.controllers;
 
+import java.util.List;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.services.PersonService;
 import pt.ulisboa.tecnico.rnl.dei.dms.dtos.PersonDto;
@@ -25,24 +26,14 @@ public class PersonController {
 	}
 
 	@PostMapping("/create")
-	public PersonDto createPerson(@RequestBody PersonDto personDto) {
+	public PersonDto createPerson(@RequestBody @Valid PersonDto personDto) {
 		return personService.createPerson(personDto);
 	}
 
 	@PutMapping("/update")
-	public PersonDto updatePerson(@RequestBody PersonDto personDto) {
+	public PersonDto updatePerson(@RequestBody @Valid PersonDto personDto) {
 		return personService.updatePerson(personDto);
 	}
-
-	//@PutMapping("/{personId}/add-resource/{resourceId}")
-	//public PersonDto addResourceToPerson(@PathVariable String personId, @PathVariable Long resourceId) {
-	//	return personService.addResourceToPerson(personId,resourceId);
-	//}
-	//
-	//@PutMapping("/{personId}/remove-resource/{resourceId}")
-	//public PersonDto removeResourceFromPerson(@PathVariable String personId, @PathVariable Long resourceId) {
-	//	return personService.removeResourceFromPerson(personId,resourceId);
-	//}
 
 	@DeleteMapping("/delete/{id}")
 	public void deletePerson(@PathVariable String id) {

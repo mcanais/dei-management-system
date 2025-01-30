@@ -126,7 +126,7 @@
 					class="text-left"
 				>
 					<template v-slot:[`item.type`]="{ item }">
-						<ReservationTypeChip :type="item.type"/>
+						<ReservationTypeChip :type="item.type" :assignedPersonId="item.assignedPersonId"/>
 					</template>
 
 					<template v-slot:[`item.state`]="{ item }">

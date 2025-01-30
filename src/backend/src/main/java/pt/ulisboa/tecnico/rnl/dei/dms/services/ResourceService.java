@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.rnl.dei.dms.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,9 +15,12 @@ import pt.ulisboa.tecnico.rnl.dei.dms.dtos.ResourceDto;
 import pt.ulisboa.tecnico.rnl.dei.dms.repository.ResourceRepository;
 import pt.ulisboa.tecnico.rnl.dei.dms.mappers.ResourceMapper;
 
-import pt.ulisboa.tecnico.rnl.dei.dms.repository.PersonRepository;
 import pt.ulisboa.tecnico.rnl.dei.dms.models.person.Person;
+import pt.ulisboa.tecnico.rnl.dei.dms.repository.PersonRepository;
 
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.Reservation;
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationState;
+import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.ReservationType;
 
 @Service
 public class ResourceService {
@@ -66,36 +71,51 @@ public class ResourceService {
         return resourceMapper.resourceToDto(resource);
     }
 
-	public void updateResourcesStates(List<Long> resourceIdsList) {
+
+    public void deleteResource(Long resourceId) {
+        resourceRepository.deleteById(resourceId);
+    }
+
+	public void updateResourceListState(List<Long> resourceIdsList) {
 		for (Long resourceId : resourceIdsList) {
         	Resource resource = resourceRepository.findById(resourceId).get();
-			resource.updateState();
+			this.updateResourceState(resource);
 			
 			resourceRepository.save(resource);
 		}
 	}
 
-	//public ResourceDto toMaintenance(ResourceDto resourceDto) {
-	//       Resource resource = resourceRepository.findById(resourceDto.getId()).get();
-	//
-	//	resource.setState(ResourceState.MAINTENANCE);
-	//
-	//	resourceRepository.save(resource);
-	//	return resourceMapper.resourceToDto(resource);
-	//}
-	//
-	//
-	//public ResourceDto setAvailable(ResourceDto resourceDto) {
-	//       Resource resource = resourceRepository.findById(resourceDto.getId()).get();
-	//
-	//	resource.setState(ResourceState.AVAILABLE);
-	//
-	//	resourceRepository.save(resource);
-	//	return resourceMapper.resourceToDto(resource);
-	//}
+	public void updateResourceState(Resource resource) {
+		if (resource.getReservations() == null || resource.getReservations().isEmpty()) {
+			resource.setState(ResourceState.AVAILABLE);
+			return;
+		}
 
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+		for (Reservation reservation : resource.getReservations()) {
+			if (reservation.getState() == ReservationState.FINISHED || reservation.getState() == ReservationState.CANCELLED) {
+				continue;
+			}
+
+			LocalDate startDate = LocalDate.parse(reservation.getStartDate(), formatter); 
+			LocalDate finishDate = LocalDate.parse(reservation.getFinishDate(), formatter); 
+			LocalDate currentDate = LocalDate.now();
+
+			if (!currentDate.isBefore(startDate) && !currentDate.isAfter(finishDate)) {
+				if (reservation.getType() == ReservationType.PERSON) {
+					resource.setState(ResourceState.INUSE);
+				} else if (reservation.getType() == ReservationType.MAINTENANCE) {
+					resource.setState(ResourceState.MAINTENANCE);
+				}
+
+				return;
+			}
+		}
+
+		resource.setState(ResourceState.AVAILABLE);
+	}
 	
-	// FIX: Not functioning, probably something to do with lazy initializing
 	
 	//@Scheduled(fixedRate = 60000)
 	//public void updateResourceStates() {
@@ -106,8 +126,4 @@ public class ResourceService {
 	//		resourceRepository.save(resource);
 	//	}
 	//}
-
-    public void deleteResource(Long resourceId) {
-        resourceRepository.deleteById(resourceId);
-    }
 } 

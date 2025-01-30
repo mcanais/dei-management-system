@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.models.person;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.util.List;
@@ -18,16 +17,10 @@ import pt.ulisboa.tecnico.rnl.dei.dms.models.reservation.Reservation;
 public class Person {
 
     @Id
-	@NotBlank(message = "ID cannot be empty")
-	@Pattern(regexp = "^ist\\d+$", 
-		message = "ID has to start with 'ist' and have following numbers")
     private String id;
 
-	@NotBlank
     private String name;
 
-	@Email
-	@NotBlank
 	private String email;
 
     @Enumerated(EnumType.STRING)

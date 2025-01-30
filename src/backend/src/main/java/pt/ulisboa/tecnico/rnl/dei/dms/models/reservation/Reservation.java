@@ -1,11 +1,7 @@
 package pt.ulisboa.tecnico.rnl.dei.dms.models.reservation;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import pt.ulisboa.tecnico.rnl.dei.dms.models.person.Person;
 import pt.ulisboa.tecnico.rnl.dei.dms.models.resource.Resource;
@@ -42,26 +38,4 @@ public class Reservation {
 	@ManyToOne
 	@JoinColumn(name = "resource_id")
 	private Resource resource;
-
-
-	public void updateState() {
-		if (this.state == ReservationState.FINISHED || this.state == ReservationState.CANCELLED) {
-			return;
-		}
-
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-		LocalDate startDate = LocalDate.parse(this.startDate, formatter); 
-		LocalDate finishDate = LocalDate.parse(this.finishDate, formatter); 
-		LocalDate currentDate = LocalDate.now();
-
-
-		if (!currentDate.isBefore(startDate) && !currentDate.isAfter(finishDate)) {
-			this.state = ReservationState.ACTIVE;
-		} else if (currentDate.isAfter(finishDate)) {
-			this.state = ReservationState.FINISHED;
-		} else {
-			this.state = ReservationState.PENDING;
-		}
-	}
 }
