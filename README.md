@@ -91,3 +91,9 @@ In order to access the database, you can use the following command:
 ```bash
 mysql -u root -p<password> -h 127.0.0.1 -P 7654 dmsdb
 ```
+
+
+## Useful resources I used for this project:
+ - https://github.com/arsy786/springboot-best-practices
+ - https://github.com/arsy786/football-club-management-system
+ - https://github.com/gabrielgua/realworld-springboot
